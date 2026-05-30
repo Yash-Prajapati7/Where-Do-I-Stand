@@ -30,95 +30,70 @@ export default function AboutPage() {
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 mx-auto max-w-5xl px-6 py-20 md:py-24"
+        transition={{ duration: 0.4 }}
+        className="relative z-10 mx-auto max-w-4xl px-4 py-16 md:py-20"
       >
-        <div className="glass-panel rounded-[2rem] p-6 md:p-8">
-          <div className="mb-8 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-textMuted">
-            <span className="soft-pill rounded-full px-3 py-1">About WDIS</span>
-            <span className="rounded-full border border-slate-900 bg-panel px-3 py-1 text-textPrimary shadow-[3px_3px_0_0_rgba(31,26,23,0.12)]">
+        <div className="glass-panel rounded-lg p-6 md:p-8">
+          <div className="mb-6 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="soft-pill px-2.5 py-1 rounded">About WDIS</span>
+            <span className="rounded border border-border bg-muted px-2.5 py-1">
               Student-facing transparency
             </span>
           </div>
 
-          <div className="mb-12 grid gap-6 md:grid-cols-[1.2fr_0.8fr] md:items-start">
+          <div className="mb-10 grid gap-6 md:grid-cols-[1.2fr_0.8fr] md:items-start">
             <div>
-              <h1 className="text-4xl font-bold leading-tight md:text-6xl">About WDIS</h1>
-              <p className="mt-4 text-lg text-textMuted md:text-xl">
-                Where Do I Stand? The placement interview tracking platform built to give students clearer progress visibility.
+              <h1 className="text-3xl font-extrabold tracking-tight text-foreground md:text-5xl">About WDIS</h1>
+              <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+                Where Do I Stand? An open placement tracking platform engineered to offer students absolute transparency across recruitment stages.
               </p>
             </div>
 
-            <div className="rounded-[1.5rem] border-2 border-slate-900 bg-panel p-4 shadow-[6px_6px_0_0_rgba(31,26,23,0.14)] md:p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-textMuted">Designed for</p>
-              <div className="mt-3 space-y-2 text-sm text-textPrimary">
-                <p>Placement committees</p>
-                <p>Recruitment coordinators</p>
-                <p>Students tracking their standing</p>
+            <div className="rounded-lg border border-border bg-muted/20 p-5 shadow-xs">
+              <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Intended Audience</p>
+              <div className="mt-3 space-y-1.5 text-xs text-foreground font-medium">
+                <p>&bull; Academic Placement Commitee</p>
+                <p>&bull; Recruitment Coordinators</p>
+                <p>&bull; Students Tracking Stands</p>
               </div>
             </div>
           </div>
 
-          <div className="grid gap-6 text-base leading-relaxed md:text-lg">
+          <div className="grid gap-4 text-sm leading-relaxed">
             <section className="panel">
-              <h2 className="text-2xl font-bold text-textPrimary">Our Mission</h2>
-              <p className="mt-3 text-textMuted">
-                WDIS is built to give students real-time visibility into their placement interview journey.
+              <h2 className="text-base font-bold text-foreground">Our Mission</h2>
+              <p className="mt-2 text-muted-foreground">
+                WDIS eliminates anxiety in college placement rounds. We provide a single, reliable public board so candidates can view their standing instantly.
               </p>
             </section>
 
             <section className="panel">
-              <h2 className="text-2xl font-bold text-textPrimary">What We Do</h2>
-              <p className="mt-3 text-textMuted">
-                We provide a live dashboard that tracks progress across multiple rounds of interviews, from group discussions to technical and HR stages.
+              <h2 className="text-base font-bold text-foreground">Aesthetic Execution</h2>
+              <p className="mt-2 text-muted-foreground">
+                Built with a high-fidelity academic layout, this dashboard connects to a MongoDB database to aggregate and serve live candidate statuses.
               </p>
             </section>
 
             <section className="panel">
-              <h2 className="text-2xl font-bold text-textPrimary">Key Features</h2>
-              <ul className="mt-4 grid gap-3">
-                <li className="rounded-2xl border border-slate-900/15 bg-canvas-soft px-4 py-3 shadow-[3px_3px_0_0_rgba(31,26,23,0.08)]"><strong>Live Kanban Board:</strong> See candidates move through each stage.</li>
-                <li className="rounded-2xl border border-slate-900/15 bg-canvas-soft px-4 py-3 shadow-[3px_3px_0_0_rgba(31,26,23,0.08)]"><strong>Process Management:</strong> Track multiple recruitment drives simultaneously.</li>
-                <li className="rounded-2xl border border-slate-900/15 bg-canvas-soft px-4 py-3 shadow-[3px_3px_0_0_rgba(31,26,23,0.08)]"><strong>Status Tracking:</strong> Know where each candidate stands at a glance.</li>
-                <li className="rounded-2xl border border-slate-900/15 bg-canvas-soft px-4 py-3 shadow-[3px_3px_0_0_rgba(31,26,23,0.08)]"><strong>SAP ID Search & Filters:</strong> Focus on a single candidate or a specific round.</li>
-                <li className="rounded-2xl border border-slate-900/15 bg-canvas-soft px-4 py-3 shadow-[3px_3px_0_0_rgba(31,26,23,0.08)]"><strong>Responsive Design:</strong> Works cleanly across desktop and mobile.</li>
+              <h2 className="text-base font-bold text-foreground">Core Functions</h2>
+              <ul className="mt-3 grid gap-2">
+                <li className="rounded-[6px] border border-border bg-muted/25 px-4 py-3 text-xs text-muted-foreground"><strong>Live Kanban Board:</strong> High-performance cards representing stage pipelines.</li>
+                <li className="rounded-[6px] border border-border bg-muted/25 px-4 py-3 text-xs text-muted-foreground"><strong>SAP ID Search:</strong> Secure, localized matching for individual privacy.</li>
+                <li className="rounded-[6px] border border-border bg-muted/25 px-4 py-3 text-xs text-muted-foreground"><strong>Orderly Timelines:</strong> Structured progression records indexed by arrival times.</li>
               </ul>
-            </section>
-
-            <section className="panel">
-              <h2 className="text-2xl font-bold text-textPrimary">How It Works</h2>
-              <ol className="mt-4 grid gap-3 list-decimal pl-5 text-textMuted">
-                <li><strong>Select a Process:</strong> Enter the company or recruitment process name on the home page.</li>
-                <li><strong>View Your Board:</strong> The Kanban board loads the configured rounds and candidates.</li>
-                <li><strong>Track Progress:</strong> Follow each candidate as statuses change.</li>
-                <li><strong>Stay Informed:</strong> Updates appear as the process evolves.</li>
-              </ol>
-            </section>
-
-            <section className="panel">
-              <h2 className="text-2xl font-bold text-textPrimary">Why WDIS Matters</h2>
-              <p className="mt-3 text-textMuted">
-                Recruitment stress is real. WDIS reduces guesswork with a simple, transparent interface that helps everyone stay aligned.
-              </p>
-            </section>
-
-            <section className="panel">
-              <h2 className="text-2xl font-bold text-textPrimary">Get Started</h2>
-              <p className="mt-3 text-textMuted">
-                Head back to the home page, enter a process name, and start tracking the journey.
-              </p>
             </section>
           </div>
 
-          <div className="mt-10 pt-8 border-t border-slate-900/15">
-            <Link href="/" className="inline-flex items-center rounded-full border-2 border-slate-900 bg-accent px-6 py-3 font-bold text-slate-950 shadow-[4px_4px_0_0_rgba(31,26,23,0.14)] transition hover:bg-accentSoft">
+          <div className="mt-8 pt-6 border-t border-border">
+            <Link href="/" className="inline-flex items-center justify-center rounded-[6px] border border-black bg-black text-white px-5 py-2.5 text-sm font-medium hover:bg-neutral-900 transition-colors shadow-sm">
               Back to Home
             </Link>
           </div>
         </div>
       </motion.div>
+
     </main>
   );
 }

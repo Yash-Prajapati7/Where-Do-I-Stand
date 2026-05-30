@@ -28,10 +28,8 @@ function matchesSearch(student, searchTerm) {
 
   const haystack = [
     student.fullName,
-    student.sapId || student.metadata?.sapId,
-    student.rollNumber,
-    student.email,
-    student.phoneNumber,
+    student.sapId,
+    student.branch,
   ]
     .map((value) => normalizeKey(value))
     .join(" ");
@@ -56,17 +54,17 @@ function matchesRound(round, roundFilter) {
 }
 
 function formatStudentProgress(student, result = null) {
-  const sapId = normalizeSapId(student.sapId || student.metadata?.sapId || "");
+  const sapId = normalizeSapId(student.sapId || "");
 
   return {
     studentDatabaseId: String(student._id),
     sapId,
-    rollNumber: student.rollNumber,
+    rollNumber: "",
     fullName: student.fullName,
-    email: student.email,
-    phoneNumber: student.phoneNumber,
+    email: "",
+    phoneNumber: "",
     branch: student.branch,
-    metadata: student.metadata || {},
+    metadata: {},
     roundResultId: result ? String(result._id) : null,
     status: result?.status || "notStarted",
     venue: result?.venue || "",
@@ -77,6 +75,7 @@ function formatStudentProgress(student, result = null) {
     updatedAt: result?.updatedAt || student.updatedAt,
   };
 }
+
 
 function normalizeRound(round) {
   return {

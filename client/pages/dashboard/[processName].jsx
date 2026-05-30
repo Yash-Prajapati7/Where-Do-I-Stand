@@ -18,18 +18,18 @@ import { ensureBoardShape } from "@/utils/sheetDataTransformer";
 
 function syncToneClass(tone) {
   if (tone === "danger") {
-    return "border-rose-300 bg-[#ffe0e0] text-rose-950";
+    return "border-red-200/60 bg-red-50/50 text-red-700 dark:border-red-950/40 dark:bg-red-950/10 dark:text-red-400";
   }
 
   if (tone === "warning") {
-    return "border-amber-300 bg-[#ffecc8] text-amber-950";
+    return "border-amber-200/60 bg-amber-50/50 text-amber-700 dark:border-amber-950/40 dark:bg-amber-950/10 dark:text-amber-400";
   }
 
   if (tone === "accent") {
-    return "border-sky-300 bg-[#d8ecff] text-slate-900";
+    return "border-blue-200/60 bg-blue-50/50 text-blue-700 dark:border-blue-950/40 dark:bg-blue-950/10 dark:text-blue-400";
   }
 
-  return "border-emerald-300 bg-[#d8f2e8] text-slate-900";
+  return "border-emerald-200/60 bg-emerald-50/50 text-emerald-700 dark:border-emerald-950/40 dark:bg-emerald-950/10 dark:text-emerald-400";
 }
 
 function decodeProcessParam(paramValue) {
@@ -47,7 +47,7 @@ function IconButton({ label, onClick, children }) {
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-2xl border-2 border-slate-900 bg-panel text-textPrimary transition hover:bg-panelSoft shadow-[3px_3px_0_0_rgba(31,26,23,0.1)]"
+      className="focus-ring inline-flex h-9 w-9 items-center justify-center rounded-[6px] border border-border bg-card text-foreground transition hover:bg-muted shadow-sm"
     >
       {children}
     </button>
@@ -59,40 +59,46 @@ function DashboardModal({ isOpen, title, description, onClose, children, footer 
     <AnimatePresence>
       {isOpen ? (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
           <motion.section
-            className="glass-panel w-full max-w-xl overflow-hidden rounded-[2rem]"
-            initial={{ opacity: 0, y: 24 }}
+            className="bg-card border border-border w-full max-w-md overflow-hidden rounded-lg shadow-xl"
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 24 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
           >
-            <header className="border-b border-slate-900/10 p-4 md:p-5">
+            <header className="border-b border-border p-4 md:p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="font-display text-xl font-semibold">{title}</h2>
+                  <h2 className="text-base font-semibold tracking-tight">{title}</h2>
                   {description ? (
-                    <p className="mt-1 text-sm text-textMuted">{description}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{description}</p>
                   ) : null}
                 </div>
-                <Button variant="secondary" onClick={onClose} type="button">
+                <button 
+                  onClick={onClose} 
+                  type="button"
+                  className="text-xs text-muted-foreground hover:text-foreground font-medium transition-colors"
+                >
                   Close
-                </Button>
+                </button>
               </div>
             </header>
 
-            <div className="p-4">{children}</div>
+            <div className="p-5">{children}</div>
 
-            {footer ? <footer className="border-t border-slate-900/10 p-4">{footer}</footer> : null}
+            {footer ? <footer className="border-t border-border bg-muted/30 px-5 py-4 flex justify-end gap-2">{footer}</footer> : null}
           </motion.section>
         </motion.div>
       ) : null}
     </AnimatePresence>
   );
 }
+
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -190,41 +196,46 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="page-shell min-h-screen p-4 md:p-6 lg:h-screen lg:overflow-hidden">
+    <main className="page-shell min-h-screen p-4 md:p-6 lg:h-screen lg:overflow-hidden bg-background">
       <div className="mx-auto flex h-full max-w-[1400px] flex-col gap-4">
         <motion.header
-          className="glass-panel rounded-[1.5rem] p-4 md:p-5"
-          initial={{ opacity: 0, y: 10 }}
+          className="glass-panel rounded-lg p-4 md:p-5"
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-[220px]">
-              <p className="text-xs uppercase tracking-[0.16em] text-accent">WDIS Dashboard</p>
-              <h1 className="mt-1 font-display text-2xl font-semibold md:text-3xl">
+              <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent">Real-Time Progression</p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground md:text-3xl leading-none">
                 {processLabel}
               </h1>
-              <p className="mt-1 text-sm text-textMuted">
+              <p className="mt-2 text-xs text-muted-foreground font-sans flex items-center gap-1.5 flex-wrap">
                 {sapId ? (
                   <>
-                    SAP ID <span className="font-mono text-textPrimary">{sapId}</span>
+                    SAP ID: <span className="font-mono text-foreground font-medium bg-muted px-1.5 py-0.5 rounded-[4px] border border-border">{sapId}</span>
                   </>
                 ) : (
-                  "SAP ID not set"
+                  <span>SAP ID not configured</span>
                 )}
-                <span className="mx-2">•</span>
-                Showing {visibleCount} cards • {roundCount} rounds
+                <span className="opacity-40">&bull;</span>
+                <span>{visibleCount} Cards</span>
+                <span className="opacity-40">&bull;</span>
+                <span>{roundCount} Stages</span>
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <div
-                className={`rounded-2xl border-2 px-3 py-2 text-sm shadow-[3px_3px_0_0_rgba(31,26,23,0.1)] ${syncToneClass(syncStatus.tone)}`}
+                className={`rounded-[6px] border px-3 py-1.5 text-xs shadow-xs transition-colors flex flex-col gap-0.5 ${syncToneClass(syncStatus.tone)}`}
                 role="status"
                 aria-live="polite"
               >
-                <p className="font-semibold">{syncStatus.label}</p>
-                <p className="text-xs opacity-90">{syncStatus.detail}</p>
-                <p className="text-xs opacity-80">Last sync {syncStatus.lastSyncLabel}</p>
+                <div className="flex items-center gap-1.5 font-medium">
+                  <span className={`h-1.5 w-1.5 rounded-full ${syncStatus.tone === "success" ? "bg-emerald-500" : "bg-amber-500"} animate-pulse`} />
+                  {syncStatus.label}
+                </div>
+                <div className="text-[10px] opacity-80 font-mono">Synced {syncStatus.lastSyncLabel}</div>
               </div>
 
               <div className="flex items-center gap-2">
@@ -234,10 +245,10 @@ export default function DashboardPage() {
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="1.8"
+                    strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="h-5 w-5"
+                    className="h-4 w-4"
                   >
                     <circle cx="11" cy="11" r="7" />
                     <path d="M20 20l-3.5-3.5" />
@@ -250,18 +261,17 @@ export default function DashboardPage() {
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="1.8"
+                    strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="h-5 w-5"
+                    className="h-4 w-4"
                   >
                     <path d="M4 5h16l-6 7v6l-4 2v-8L4 5z" />
                   </svg>
                 </IconButton>
               </div>
 
-              <Button variant="secondary" onClick={() => router.push("/")}
-              >
+              <Button variant="secondary" onClick={() => router.push("/")}>
                 Change Process
               </Button>
             </div>
@@ -270,21 +280,20 @@ export default function DashboardPage() {
 
         <section className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
-            <div className="glass-panel rounded-[1.25rem] p-6">
+            <div className="glass-panel rounded-lg p-8 flex justify-center items-center">
               <LoadingSpinner label="Loading process board" />
             </div>
           ) : null}
 
           {isError && !data ? (
-            <div className="glass-panel rounded-[1.25rem] p-6">
-              <h2 className="font-display text-xl font-semibold text-rose-800">Unable to load dashboard</h2>
-              <p className="mt-2 text-sm text-textMuted">
-                {error?.message || "An error occurred while loading process data."}
+            <div className="glass-panel rounded-lg p-6 border-red-200 bg-red-50/10 max-w-lg">
+              <h2 className="text-base font-bold text-red-800">Unable to load dashboard</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {error?.response?.data?.message || error?.message || \"An error occurred while loading process data. Please check your internet connection and try again.\"}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button onClick={() => refetch()}>Retry Now</Button>
-                <Button variant="secondary" onClick={() => router.push("/")}
-                >
+                <Button variant="secondary" onClick={() => router.push("/")}>
                   Back To Landing
                 </Button>
               </div>
@@ -292,10 +301,10 @@ export default function DashboardPage() {
           ) : null}
 
           {!isLoading && board.length === 0 ? (
-            <div className="glass-panel rounded-[1.25rem] p-6">
-              <h2 className="font-display text-xl font-semibold">No process board found</h2>
-              <p className="mt-2 text-sm text-textMuted">
-                This process has no configured rounds yet. Ask admin to add rounds and student data.
+            <div className="glass-panel rounded-lg p-8 text-center max-w-md mx-auto mt-12">
+              <h2 className="text-base font-semibold">No rounds configured</h2>
+              <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+                This recruitment process doesn't have any configured stages yet. Ask the process coordinator to configure rounds in admin step 3.
               </p>
             </div>
           ) : null}
@@ -303,19 +312,24 @@ export default function DashboardPage() {
           {board.length > 0 && !isLoading ? (
             <div className="min-h-0 flex-1">
               {!sapId ? (
-                <div className="glass-panel flex h-full flex-col items-start justify-center rounded-[1.25rem] p-6">
-                  <h2 className="font-display text-xl font-semibold">Enter your SAP ID</h2>
-                  <p className="mt-2 text-sm text-textMuted">
-                    Use the search icon to enter your SAP ID and view your cards.
+                <div className="glass-panel flex h-64 flex-col items-center justify-center rounded-lg p-6 max-w-md mx-auto mt-12 text-center">
+                  <h2 className="text-base font-semibold">Identification Required</h2>
+                  <p className="mt-1 text-xs text-muted-foreground max-w-xs">
+                    Please use the search icon above to enter your SAP ID and view your recruitment progress.
                   </p>
+                  <Button className="mt-4" onClick={() => setSearchOpen(true)}>
+                    Enter SAP ID
+                  </Button>
                 </div>
               ) : visibleCount === 0 ? (
-                <div className="glass-panel flex h-full flex-col items-start justify-center rounded-[1.25rem] p-6">
-                  <h2 className="font-display text-xl font-semibold">No record found</h2>
-                  <p className="mt-2 text-sm text-textMuted">
-                    No cards match SAP ID <span className="font-mono text-textPrimary">{sapId}</span>.
-                    Double-check the SAP ID and try again.
+                <div className="glass-panel flex h-64 flex-col items-center justify-center rounded-lg p-6 max-w-md mx-auto mt-12 text-center">
+                  <h2 className="text-base font-semibold">No Records Found</h2>
+                  <p className="mt-1 text-xs text-muted-foreground max-w-xs">
+                    No active cards found for <span className="font-mono text-foreground font-medium">{sapId}</span> in this process.
                   </p>
+                  <Button className="mt-4" variant="secondary" onClick={() => setSearchOpen(true)}>
+                    Check SAP ID
+                  </Button>
                 </div>
               ) : (
                 <KanbanBoard board={filteredBoard} />
@@ -328,80 +342,104 @@ export default function DashboardPage() {
       <DashboardModal
         isOpen={searchOpen}
         title="Search by SAP ID"
-        description="Enter your SAP ID to view your cards."
+        description="Enter your exact academic SAP ID to retrieve active placement cards."
         onClose={() => setSearchOpen(false)}
         footer={
-          <Button
-            type="button"
-            onClick={() => {
-              setSapId(draftSapId);
-              setSearchOpen(false);
-            }}
-          >
-            View
-          </Button>
+          <>
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => setSearchOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setSapId(draftSapId);
+                setSearchOpen(false);
+              }}
+            >
+              Verify & View
+            </Button>
+          </>
         }
       >
-        <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-textMuted">
-          SAP ID
-        </label>
-        <Input
-          ref={sapInputRef}
-          value={draftSapId}
-          onChange={(event) => setDraftSapId(event.target.value)}
-          placeholder="Enter your SAP ID"
-          aria-label="SAP ID"
-          autoComplete="off"
-          className="mt-2"
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              setSapId(draftSapId);
-              setSearchOpen(false);
-            }
-          }}
-        />
+        <div className="space-y-1">
+          <label className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+            Academic SAP ID
+          </label>
+          <Input
+            ref={sapInputRef}
+            value={draftSapId}
+            onChange={(event) => setDraftSapId(event.target.value)}
+            placeholder="e.g. 500092301"
+            aria-label="SAP ID"
+            autoComplete="off"
+            className="mt-1 font-mono uppercase"
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                setSapId(draftSapId);
+                setSearchOpen(false);
+              }
+            }}
+          />
+        </div>
       </DashboardModal>
 
       <DashboardModal
         isOpen={filtersOpen}
-        title="Filters"
-        description="Narrow results by round or status."
+        title="Filter Dashboard"
+        description="Filter cards by specific rounds or progress status."
         onClose={() => setFiltersOpen(false)}
         footer={
-          <Button
-            variant="secondary"
-            type="button"
-            onClick={() => {
-              resetFilters();
-            }}
-          >
-            Reset
-          </Button>
+          <>
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => {
+                resetFilters();
+                setFiltersOpen(false);
+              }}
+            >
+              Reset Filters
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setFiltersOpen(false)}
+            >
+              Apply
+            </Button>
+          </>
         }
       >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="text-xs text-textMuted">
-            Round
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-1">
+            <label className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              Round / Stage
+            </label>
             <select
               value={roundFilter}
               onChange={(event) => setRoundFilter(event.target.value)}
-              className="focus-ring mt-1 block w-full rounded-2xl border-2 border-slate-900 bg-panel px-3 py-2 text-sm text-textPrimary shadow-[3px_3px_0_0_rgba(31,26,23,0.08)]"
+              className="mt-1 block w-full rounded-[6px] border border-border bg-card px-3 py-2 text-xs text-foreground focus:border-foreground focus:ring-1 focus:ring-foreground transition-all shadow-sm"
             >
-              <option value="all">All rounds</option>
+              <option value="all">All stages</option>
               {options.rounds.map((round) => (
                 <option key={round} value={round.toLowerCase()}>
                   {round}
                 </option>
               ))}
             </select>
-          </label>
+          </div>
 
-          <label className="text-xs text-textMuted">
-            Status
+          <div className="space-y-1">
+            <label className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              Progress Status
+            </label>
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value)}
-              className="focus-ring mt-1 block w-full rounded-2xl border-2 border-slate-900 bg-panel px-3 py-2 text-sm text-textPrimary shadow-[3px_3px_0_0_rgba(31,26,23,0.08)]"
+              className="mt-1 block w-full rounded-[6px] border border-border bg-card px-3 py-2 text-xs text-foreground focus:border-foreground focus:ring-1 focus:ring-foreground transition-all shadow-sm"
             >
               <option value="all">All statuses</option>
               {options.statuses.map((status) => (
@@ -410,9 +448,10 @@ export default function DashboardPage() {
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         </div>
       </DashboardModal>
     </main>
   );
 }
+

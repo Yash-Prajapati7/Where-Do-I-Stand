@@ -12,19 +12,8 @@ const HEADER_ALIASES = {
     "sapstudentid",
     "sapstudentnumber",
   ],
-  rollNumber: [
-    "studentid",
-    "studentroll",
-    "rollnumber",
-    "rollno",
-    "registrationnumber",
-    "regno",
-    "studentnumber",
-  ],
   fullName: ["name", "studentname", "fullname", "candidatename"],
-  email: ["email", "emailid", "mail"],
-  phoneNumber: ["phone", "mobilenumber", "mobile", "contactnumber", "contact"],
-  branch: ["branch", "department", "stream", "course"],
+  branch: ["branch", "department", "stream", "course", "dept"],
 };
 
 function normalizeHeader(header) {
@@ -32,19 +21,6 @@ function normalizeHeader(header) {
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
-}
-
-function toCamelCase(value) {
-  return String(value || "")
-    .trim()
-    .replace(/[^a-zA-Z0-9 ]+/g, " ")
-    .split(" ")
-    .filter(Boolean)
-    .map((part, index) => {
-      const lower = part.toLowerCase();
-      return index === 0 ? lower : lower.charAt(0).toUpperCase() + lower.slice(1);
-    })
-    .join("");
 }
 
 function resolveHeaderMap(headers) {
@@ -97,11 +73,11 @@ export function parseStudentExcel(fileBuffer) {
   const headers = Object.keys(rows[0] || {});
   const headerMap = resolveHeaderMap(headers);
 
-  const resolvedSapHeader = headerMap.sapId || headerMap.rollNumber;
+  const resolvedSapHeader = headerMap.sapId;
 
   if (!resolvedSapHeader || !headerMap.fullName) {
     throw createHttpError(
-      "Sheet must include SAP ID (aliases: SAP ID / StudentID / RollNumber) and Name columns.",
+      "Sheet must include SAP ID (aliases: SAP ID) and Full Name (aliases: Name / Full Name) columns.",
       400
     );
   }
@@ -113,9 +89,6 @@ export function parseStudentExcel(fileBuffer) {
   rows.forEach((row, index) => {
     const rowNumber = index + 2;
     const sapId = normalizeSapId(row[resolvedSapHeader]);
-    const rollNumber = headerMap.rollNumber
-      ? normalizeText(row[headerMap.rollNumber])
-      : "";
     const fullName = normalizeText(row[headerMap.fullName]);
 
     if (!sapId || !fullName) {
@@ -132,45 +105,12 @@ export function parseStudentExcel(fileBuffer) {
 
     seenSapIds.add(dedupeKey);
 
-    const email = normalizeText(row[headerMap.email] || "").toLowerCase();
-    const phoneNumber = normalizeText(row[headerMap.phoneNumber] || "");
     const branch = normalizeText(row[headerMap.branch] || "");
-
-    const metadata = {};
-
-    Object.entries(row).forEach(([columnName, value]) => {
-      if (
-        columnName === resolvedSapHeader ||
-        columnName === headerMap.rollNumber ||
-        columnName === headerMap.fullName ||
-        columnName === headerMap.email ||
-        columnName === headerMap.phoneNumber ||
-        columnName === headerMap.branch
-      ) {
-        return;
-      }
-
-      const cleaned = normalizeText(value);
-      if (!cleaned) {
-        return;
-      }
-
-      const key = toCamelCase(columnName);
-      if (!key) {
-        return;
-      }
-
-      metadata[key] = cleaned;
-    });
 
     records.push({
       sapId,
-      rollNumber,
       fullName,
-      email,
-      phoneNumber,
       branch,
-      metadata,
     });
   });
 
@@ -185,3 +125,4 @@ export function parseStudentExcel(fileBuffer) {
     worksheetName: sheetName,
   };
 }
+

@@ -92,41 +92,41 @@ export default function FAQPage() {
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 mx-auto max-w-4xl px-6 py-20 md:py-24"
+        transition={{ duration: 0.4 }}
+        className="relative z-10 mx-auto max-w-3xl px-4 py-16 md:py-20"
       >
-        <div className="glass-panel rounded-[2rem] p-6 md:p-8">
-          <div className="mb-8 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-textMuted">
-            <span className="soft-pill rounded-full px-3 py-1">FAQ</span>
-            <span className="rounded-full border border-slate-900 bg-panel px-3 py-1 text-textPrimary shadow-[3px_3px_0_0_rgba(31,26,23,0.12)]">
+        <div className="glass-panel rounded-lg p-6 md:p-8">
+          <div className="mb-6 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="soft-pill px-2.5 py-1 rounded">FAQ</span>
+            <span className="rounded border border-border bg-muted px-2.5 py-1">
               Common questions
             </span>
           </div>
 
-          <div className="mb-12">
-            <h1 className="text-4xl font-bold leading-tight md:text-6xl">Frequently Asked Questions</h1>
-            <p className="mt-4 text-lg text-textMuted md:text-xl">
-              Everything you need to know about WDIS and how to use it.
+          <div className="mb-8">
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground md:text-5xl">Frequently Asked Questions</h1>
+            <p className="mt-2 text-base text-muted-foreground">
+              Everything you need to know about tracking your stands.
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {faqs.map((faq, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="overflow-hidden rounded-[1.25rem] border-2 border-slate-900 bg-panel shadow-[4px_4px_0_0_rgba(31,26,23,0.12)]"
+                transition={{ delay: index * 0.04 }}
+                className="overflow-hidden rounded-[6px] border border-border bg-card shadow-xs"
               >
                 <button
                   onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-lg font-bold text-textPrimary transition hover:bg-panelSoft"
+                  className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm font-semibold text-foreground transition hover:bg-muted/40"
                 >
                   <span>{faq.question}</span>
-                  <span className={`text-accent text-2xl transition-transform ${openIndex === index ? "rotate-180" : ""}`}>
+                  <span className={`text-muted-foreground text-xs transition-transform duration-150 ${openIndex === index ? "rotate-180" : ""}`}>
                     ▼
                   </span>
                 </button>
@@ -136,8 +136,8 @@ export default function FAQPage() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="border-t border-slate-900/10 px-5 py-4 text-textMuted leading-relaxed"
+                    transition={{ duration: 0.2 }}
+                    className="border-t border-border px-4 py-3 text-xs text-muted-foreground leading-relaxed bg-muted/10"
                   >
                     {faq.answer}
                   </motion.div>
@@ -146,14 +146,14 @@ export default function FAQPage() {
             ))}
           </div>
 
-          <div className="mt-12 rounded-[1.5rem] border border-slate-900/15 bg-[#eef4ff] p-6 shadow-[4px_4px_0_0_rgba(31,26,23,0.1)]">
-            <p className="text-center text-textPrimary">
-              <strong>Didn't find your answer?</strong> Reach out to your placement committee or technical team for assistance.
+          <div className="mt-8 rounded-[6px] border border-border bg-muted/15 p-5">
+            <p className="text-center text-xs text-muted-foreground">
+              <strong>Need help?</strong> Reach out directly to your placement committee or recruitment lead for queries.
             </p>
           </div>
 
-          <div className="mt-12 border-t border-slate-900/15 pt-8">
-            <Link href="/" className="inline-flex items-center rounded-full border-2 border-slate-900 bg-accent px-6 py-3 font-bold text-slate-950 shadow-[4px_4px_0_0_rgba(31,26,23,0.14)] transition hover:bg-accentSoft">
+          <div className="mt-8 border-t border-border pt-6">
+            <Link href="/" className="inline-flex items-center justify-center rounded-[6px] border border-black bg-black text-white px-5 py-2.5 text-sm font-medium hover:bg-neutral-900 transition-colors shadow-sm">
               Back to Home
             </Link>
           </div>

@@ -389,39 +389,48 @@ export async function uploadStudentsFromExcel(req, res, next) {
     const records = parsed.records.map((record) => ({
       ...record,
       sapId: normalizeSapId(record.sapId),
-      rollNumber: normalizeText(record.rollNumber || ""),
     }));
 
     const operations = records.map((record) => ({
       updateOne: {
         filter: {
           processId: processDoc._id,
-          $or: [
-            { sapId: record.sapId },
-            { rollNumber: record.sapId },
-            { rollNumber: record.rollNumber },
-            { "metadata.sapId": record.sapId },
-          ].filter((entry) => Object.values(entry)[0]),
+          sapId: record.sapId,
         },
         update: {
           $set: {
             processId: processDoc._id,
             sapId: record.sapId,
-            rollNumber: record.rollNumber || record.sapId,
             fullName: record.fullName,
-            email: record.email,
-            phoneNumber: record.phoneNumber,
             branch: record.branch,
-            metadata: record.metadata,
           },
         },
         upsert: true,
       },
     }));
 
-    const bulkResult = await Student.bulkWrite(operations, {
-      ordered: false,
-    });
+    let bulkResult;
+    try {
+      bulkResult = await Student.bulkWrite(operations, {
+        ordered: false,
+      });
+    } catch (bulkError) {
+      // Handle MongoDB duplicate key and validation errors
+      if (bulkError.code === 11000) {
+        const keyPattern = bulkError.keyPattern || {};
+        const keyValue = bulkError.keyValue || {};
+        const fields = Object.keys(keyPattern);
+        const values = fields
+          .map((field) => `${field}: ${keyValue[field] === null || keyValue[field] === "" ? "empty/missing" : JSON.stringify(keyValue[field])}`)
+          .join(", ");
+        throw createHttpError(
+          `Duplicate student entry detected: ${values}. A student with this combination already exists in this process. Please verify your Excel file for duplicate SAP IDs.`,
+          409
+        );
+      }
+      // Re-throw if it's not a duplicate key error
+      throw bulkError;
+    }
 
     const insertedCount = bulkResult.upsertedCount || 0;
     const modifiedCount = bulkResult.modifiedCount || 0;
@@ -482,20 +491,16 @@ export async function listProcessStudents(req, res, next) {
           return true;
         }
 
-        const derivedSapId = normalizeSapId(
-          student.sapId || student.metadata?.sapId || student.rollNumber
-        );
+        const derivedSapId = normalizeSapId(student.sapId);
 
-        const searchable = [student.fullName, derivedSapId, student.rollNumber, student.email]
+        const searchable = [student.fullName, derivedSapId]
           .map((value) => normalizeKey(value))
           .join(" ");
 
         return searchable.includes(search);
       })
       .map((student) => {
-        const derivedSapId = normalizeSapId(
-          student.sapId || student.metadata?.sapId || student.rollNumber
-        );
+        const derivedSapId = normalizeSapId(student.sapId);
 
         const progress = rounds.map((round) => {
           const progressKey = `${String(student._id)}:${String(round._id)}`;
@@ -522,16 +527,17 @@ export async function listProcessStudents(req, res, next) {
           id: derivedSapId || String(student._id),
           studentDatabaseId: String(student._id),
           sapId: derivedSapId,
-          rollNumber: student.rollNumber,
+          rollNumber: "",
           fullName: student.fullName,
-          email: student.email,
-          phoneNumber: student.phoneNumber,
+          email: "",
+          phoneNumber: "",
           branch: student.branch,
-          metadata: student.metadata || {},
+          metadata: {},
           roundProgress: progress,
           updatedAt: student.updatedAt,
         };
       });
+
 
     res.status(200).json({
       process: serializeProcess(processDoc),
@@ -566,11 +572,7 @@ export async function upsertStudentRoundResult(req, res, next) {
 
       studentDoc = await Student.findOne({
         processId: processDoc._id,
-        $or: [
-          { sapId },
-          { rollNumber: sapId },
-          { "metadata.sapId": sapId },
-        ],
+        sapId,
       });
     }
 
@@ -635,7 +637,8 @@ export async function upsertStudentRoundResult(req, res, next) {
 
     res.status(200).json({
       processId: String(processDoc._id),
-      studentId: normalizeSapId(studentDoc.sapId || studentDoc.metadata?.sapId || studentDoc.rollNumber),
+      studentId: normalizeSapId(studentDoc.sapId),
+
       studentDatabaseId: String(studentDoc._id),
       roundId: String(round._id),
       roundResult: {

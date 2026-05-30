@@ -10,16 +10,17 @@ export default function Button({
     <button
       type={type}
       className={clsx(
-        "w-fit rounded-2xl border px-4 py-2 text-sm font-semibold transition duration-150 disabled:cursor-not-allowed disabled:opacity-50",
+        "w-fit rounded-[6px] border px-4 py-2 text-sm font-medium transition duration-150 ease-in-out disabled:cursor-not-allowed disabled:opacity-50 select-none shadow-sm",
         variant === "primary" &&
-          "border-slate-900 bg-slate-900 text-white hover:bg-slate-800",
+          "border-black bg-black text-white hover:bg-neutral-900 hover:border-neutral-900",
         variant === "secondary" &&
-          "border-slate-300 bg-white text-slate-900 hover:bg-slate-50",
+          "border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50 hover:border-neutral-300",
         variant === "danger" &&
-          "border-rose-600 bg-rose-600 text-white hover:bg-rose-700",
+          "border-red-600 bg-red-600 text-white hover:bg-red-700",
         className
       )}
       {...props}
     />
   );
 }
+

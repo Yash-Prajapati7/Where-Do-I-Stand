@@ -19,6 +19,7 @@ export default function useProcessData(processName) {
   const [isStreamConnected, setIsStreamConnected] = useState(false);
   const pollInterval = usePolling(offlineHint);
   const refetchRef = useRef(null);
+  const eventSourceRef = useRef(null);
 
   const query = useQuery({
     queryKey: ["process-data", normalizedProcessName],
@@ -68,17 +69,21 @@ export default function useProcessData(processName) {
       eventSource = new window.EventSource(
         buildProcessEventStreamUrl(normalizedProcessName)
       );
+      eventSourceRef.current = eventSource;
     } catch (error) {
+      console.error("[EventSource] Failed to initialize:", error.message);
       setIsStreamConnected(false);
       return undefined;
     }
 
     const handleConnected = () => {
+      console.log("[EventSource] Connected successfully");
       setIsStreamConnected(true);
       setOfflineHint(false);
     };
 
     const handleProcessUpdated = () => {
+      console.log("[EventSource] Process update received");
       setOfflineHint(false);
 
       if (typeof refetchRef.current === "function") {
@@ -86,8 +91,19 @@ export default function useProcessData(processName) {
       }
     };
 
-    const handleError = () => {
+    const handleError = (error) => {
+      console.error("[EventSource] Connection error:", error);
       setIsStreamConnected(false);
+      setOfflineHint(true);
+      
+      // Log more details about the error
+      if (eventSource.readyState === window.EventSource.CONNECTING) {
+        console.warn("[EventSource] Attempting to reconnect...");
+      } else if (eventSource.readyState === window.EventSource.CLOSED) {
+        console.warn("[EventSource] Connection closed by server");
+      } else {
+        console.warn("[EventSource] Unknown error state");
+      }
     };
 
     eventSource.onopen = handleConnected;
@@ -96,9 +112,11 @@ export default function useProcessData(processName) {
     eventSource.addEventListener("processUpdated", handleProcessUpdated);
 
     return () => {
+      console.log("[EventSource] Cleaning up connection");
       eventSource.removeEventListener("connected", handleConnected);
       eventSource.removeEventListener("processUpdated", handleProcessUpdated);
       eventSource.close();
+      eventSourceRef.current = null;
       setIsStreamConnected(false);
     };
   }, [normalizedProcessName]);

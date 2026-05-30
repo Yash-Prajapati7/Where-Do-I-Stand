@@ -254,10 +254,10 @@ export default function RoundsStepPage() {
         <>
           <section className="grid-two">
             <article className="panel">
-              <h2>Add Round</h2>
+              <h2 className="text-base font-bold tracking-tight mb-4 text-neutral-900 border-b border-neutral-100 pb-2">Add Stage</h2>
               <form className="stack" onSubmit={onAddRound}>
-                <label>
-                  Round Name
+                <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
+                  Stage / Round Name
                   <Input
                     value={newRoundForm.name}
                     onChange={(event) =>
@@ -266,13 +266,14 @@ export default function RoundsStepPage() {
                         name: event.target.value,
                       }))
                     }
-                    placeholder="Example: Round 1 - Technical"
+                    placeholder="e.g. Technical Interview"
                     required
+                    className="mt-1"
                   />
                 </label>
 
-                <label>
-                  Round Type
+                <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
+                  Stage Type
                   <Select
                     value={newRoundForm.type}
                     onChange={(event) =>
@@ -281,6 +282,7 @@ export default function RoundsStepPage() {
                         type: event.target.value,
                       }))
                     }
+                    className="mt-1"
                   >
                     {roundTypeOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -290,8 +292,8 @@ export default function RoundsStepPage() {
                   </Select>
                 </label>
 
-                <label>
-                  Order (Optional)
+                <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
+                  Order Index (Optional)
                   <Input
                     type="number"
                     min="1"
@@ -303,11 +305,12 @@ export default function RoundsStepPage() {
                       }))
                     }
                     placeholder="Auto-increment if empty"
+                    className="mt-1"
                   />
                 </label>
 
-                <div className="checkbox-row">
-                  <label>
+                <div className="checkbox-row mt-1 py-1">
+                  <label className="text-xs text-neutral-600 flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={newRoundForm.allowGroupNumber}
@@ -317,11 +320,12 @@ export default function RoundsStepPage() {
                           allowGroupNumber: event.target.checked,
                         }))
                       }
+                      className="rounded-[3px] border-neutral-300 text-black focus:ring-black h-3.5 w-3.5"
                     />
                     Enable Group Number
                   </label>
 
-                  <label>
+                  <label className="text-xs text-neutral-600 flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={newRoundForm.allowVenue}
@@ -331,50 +335,54 @@ export default function RoundsStepPage() {
                           allowVenue: event.target.checked,
                         }))
                       }
+                      className="rounded-[3px] border-neutral-300 text-black focus:ring-black h-3.5 w-3.5"
                     />
-                    Enable Venue
+                    Enable Venue Info
                   </label>
                 </div>
 
-                <Button type="submit" disabled={addRoundMutation.isPending}>
-                  {addRoundMutation.isPending ? "Adding…" : "Add Round"}
+                <Button type="submit" disabled={addRoundMutation.isPending} className="w-full justify-center">
+                  {addRoundMutation.isPending ? "Adding…" : "Add Stage"}
                 </Button>
               </form>
 
-              {addRoundAck ? <div className="status-box success">{addRoundAck}</div> : null}
+              {addRoundAck ? <div className="status-box success mt-4 text-xs">{addRoundAck}</div> : null}
 
               {addRoundMutation.error ? (
-                <div className="status-box error">
+                <div className="status-box error mt-4 text-xs">
                   {addRoundMutation.error?.response?.data?.message ||
                     addRoundMutation.error.message}
                 </div>
               ) : null}
             </article>
-
             <article className="panel">
-              <h2>Round History</h2>
+              <h2 className="text-base font-bold tracking-tight mb-4 text-neutral-900 border-b border-neutral-100 pb-2">Rounds Timelines History</h2>
               {roundHistory.length === 0 ? (
-                <p className="muted">No rounds created yet.</p>
+                <div className="flex h-36 items-center justify-center rounded-[6px] border border-dashed border-neutral-200 text-xs text-neutral-400">
+                  No rounds created yet
+                </div>
               ) : (
                 <div className="table-wrap">
                   <table className="history-table">
                     <thead>
                       <tr>
-                        <th>Added</th>
-                        <th>Round</th>
-                        <th>Type</th>
-                        <th>Order</th>
-                        <th>Active</th>
+                        <th className="font-mono text-[9px]">Added Timestamp</th>
+                        <th className="font-mono text-[9px]">Round</th>
+                        <th className="font-mono text-[9px]">Type</th>
+                        <th className="font-mono text-[9px]">Order</th>
+                        <th className="font-mono text-[9px]">Active</th>
                       </tr>
                     </thead>
                     <tbody>
                       {roundHistory.map((round) => (
-                        <tr key={round.id}>
-                          <td>{formatTimestamp(round.createdAt)}</td>
-                          <td>{round.name}</td>
-                          <td>{formatTypeLabel(round.type)}</td>
-                          <td>{round.order}</td>
-                          <td>{round.isActive === false ? "No" : "Yes"}</td>
+                        <tr key={round.id} className="text-xs text-neutral-700">
+                          <td className="font-mono text-[10px]">{formatTimestamp(round.createdAt)}</td>
+                          <td className="font-semibold">{round.name}</td>
+                          <td className="font-mono text-[10px]">{formatTypeLabel(round.type)}</td>
+                          <td className="font-mono">{round.order}</td>
+                          <td>
+                            <span className={`inline-block h-2 w-2 rounded-full ${round.isActive === false ? "bg-neutral-300" : "bg-emerald-500"}`} />
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -384,10 +392,12 @@ export default function RoundsStepPage() {
             </article>
           </section>
 
-          <section className="panel">
-            <h2>Manage Existing Rounds</h2>
+          <section className="panel mt-6">
+            <h2 className="text-base font-bold tracking-tight mb-4 text-neutral-900 border-b border-neutral-100 pb-2">Configure Stage Templates</h2>
             {rounds.length === 0 ? (
-              <p className="muted">No rounds created yet.</p>
+              <div className="flex h-36 items-center justify-center rounded-[6px] border border-dashed border-neutral-200 text-xs text-neutral-400">
+                No active stages configured. Add a stage above.
+              </div>
             ) : (
               <div className="round-grid">
                 {rounds.map((round) => {
@@ -397,14 +407,14 @@ export default function RoundsStepPage() {
                   }
 
                   return (
-                    <article key={round.id} className="round-card">
-                      <header>
-                        <h3>{round.name}</h3>
-                        <small>{formatTypeLabel(round.type)}</small>
+                    <article key={round.id} className="round-card border border-neutral-200/80 bg-neutral-50/20 p-4 rounded-[6px]">
+                      <header className="flex items-center justify-between pb-2 border-b border-neutral-100">
+                        <h3 className="text-xs font-bold text-neutral-900">{round.name}</h3>
+                        <small className="text-[10px] font-mono font-medium text-accent uppercase tracking-wider">{formatTypeLabel(round.type)}</small>
                       </header>
 
-                      <label>
-                        Name
+                      <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider mt-2">
+                        Display Name
                         <Input
                           value={draft.name}
                           onChange={(event) =>
@@ -416,11 +426,12 @@ export default function RoundsStepPage() {
                               },
                             }))
                           }
+                          className="mt-1"
                         />
                       </label>
 
-                      <label>
-                        Type
+                      <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
+                        Stage Type
                         <Select
                           value={draft.type}
                           onChange={(event) =>
@@ -432,6 +443,7 @@ export default function RoundsStepPage() {
                               },
                             }))
                           }
+                          className="mt-1"
                         >
                           {roundTypeOptions.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -441,8 +453,8 @@ export default function RoundsStepPage() {
                         </Select>
                       </label>
 
-                      <label>
-                        Order
+                      <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
+                        Order Index
                         <Input
                           type="number"
                           min="1"
@@ -456,11 +468,12 @@ export default function RoundsStepPage() {
                               },
                             }))
                           }
+                          className="mt-1 font-mono"
                         />
                       </label>
 
-                      <div className="checkbox-row">
-                        <label>
+                      <div className="checkbox-row mt-1 py-1">
+                        <label className="text-[11px] text-neutral-600 flex items-center gap-1.5 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={draft.allowGroupNumber}
@@ -473,11 +486,12 @@ export default function RoundsStepPage() {
                                 },
                               }))
                             }
+                            className="rounded-[3px] border-neutral-300 text-black focus:ring-black h-3.5 w-3.5"
                           />
-                          Group Number
+                          Group Info
                         </label>
 
-                        <label>
+                        <label className="text-[11px] text-neutral-600 flex items-center gap-1.5 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={draft.allowVenue}
@@ -490,24 +504,28 @@ export default function RoundsStepPage() {
                                 },
                               }))
                             }
+                            className="rounded-[3px] border-neutral-300 text-black focus:ring-black h-3.5 w-3.5"
                           />
-                          Venue
+                          Venue Info
                         </label>
                       </div>
 
-                      <div className="button-row">
+                      <div className="button-row mt-4 justify-between w-full">
                         <Button
                           onClick={() => onSaveRound(round.id)}
                           disabled={updateRoundMutation.isPending}
+                          variant="secondary"
+                          className="text-xs py-1.5 px-3"
                         >
-                          Save Round
+                          Save Changes
                         </Button>
                         <Button
                           variant="danger"
                           onClick={() => onDeleteRound(round.id)}
                           disabled={deleteRoundMutation.isPending}
+                          className="text-xs py-1.5 px-3"
                         >
-                          Remove Round
+                          Delete
                         </Button>
                       </div>
                     </article>
@@ -517,27 +535,28 @@ export default function RoundsStepPage() {
             )}
 
             {updateRoundMutation.error ? (
-              <div className="status-box error">
+              <div className="status-box error mt-4 text-xs">
                 {updateRoundMutation.error?.response?.data?.message ||
                   updateRoundMutation.error.message}
               </div>
             ) : null}
 
             {deleteRoundMutation.error ? (
-              <div className="status-box error">
+              <div className="status-box error mt-4 text-xs">
                 {deleteRoundMutation.error?.response?.data?.message ||
                   deleteRoundMutation.error.message}
               </div>
             ) : null}
           </section>
 
-          <section className="panel">
+          <section className="panel nav-section">
             <div className="button-row">
-              <Button variant="secondary" onClick={() => router.push("/students")}
-              >
-                Back: Students
+              <Button variant="secondary" onClick={() => router.push("/students")}>
+                Back: Import Students
               </Button>
-              <Button onClick={() => router.push("/progress")}>Next: Progress</Button>
+            </div>
+            <div className="button-row">
+              <Button onClick={() => router.push("/progress")}>Next: Update Progress</Button>
             </div>
           </section>
         </>

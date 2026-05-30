@@ -6,7 +6,7 @@ const Input = forwardRef(function Input({ className, ...props }, ref) {
     <input
       ref={ref}
       className={clsx(
-        "focus-ring w-full rounded-2xl border-2 border-slate-900 bg-panel px-3 py-2.5 text-sm text-textPrimary placeholder:text-textMuted shadow-[4px_4px_0_0_rgba(31,26,23,0.10)]",
+        "focus-ring w-full rounded-[6px] border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus:border-foreground focus:ring-1 focus:ring-foreground",
         className
       )}
       {...props}
@@ -15,3 +15,4 @@ const Input = forwardRef(function Input({ className, ...props }, ref) {
 });
 
 export default Input;
+
