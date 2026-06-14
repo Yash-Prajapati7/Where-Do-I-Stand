@@ -85,6 +85,29 @@ const roundSchema = new mongoose.Schema(
   }
 );
 
+const studentSchema = new mongoose.Schema(
+  {
+    sapId: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    fullName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    branch: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
 const processSchema = new mongoose.Schema(
   {
     processName: {
@@ -110,6 +133,10 @@ const processSchema = new mongoose.Schema(
     },
     rounds: {
       type: [roundSchema],
+      default: [],
+    },
+    students: {
+      type: [studentSchema],
       default: [],
     },
     isArchived: {

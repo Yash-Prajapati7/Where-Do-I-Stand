@@ -289,7 +289,7 @@ export default function DashboardPage() {
             <div className="glass-panel rounded-lg p-6 border-red-200 bg-red-50/10 max-w-lg">
               <h2 className="text-base font-bold text-red-800">Unable to load dashboard</h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                {error?.response?.data?.message || error?.message || \"An error occurred while loading process data. Please check your internet connection and try again.\"}
+                {error?.response?.data?.message || error?.message || "An error occurred while loading process data. Please check your internet connection and try again."}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Button onClick={() => refetch()}>Retry Now</Button>

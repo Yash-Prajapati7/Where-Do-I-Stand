@@ -1,6 +1,5 @@
 import Process from "../models/Process.js";
 import RoundResult from "../models/RoundResult.js";
-import Student from "../models/Student.js";
 import { subscribeToProcessUpdates } from "../services/processEventService.js";
 import { buildProcessBoard } from "../services/processBoardService.js";
 import { createHttpError } from "../utils/httpError.js";
@@ -39,10 +38,11 @@ export async function getProcessData(req, res, next) {
   try {
     const processDoc = await findProcessOrThrow(req.params.processName);
 
-    const [students, roundResults] = await Promise.all([
-      Student.find({ processId: processDoc._id }).sort({ fullName: 1 }).lean(),
-      RoundResult.find({ processId: processDoc._id }).lean(),
-    ]);
+    const students = [...(processDoc.students || [])].sort((a, b) =>
+      a.fullName.localeCompare(b.fullName)
+    );
+
+    const roundResults = await RoundResult.find({ processId: processDoc._id }).lean();
 
     const responsePayload = buildProcessBoard({
       processDoc,
@@ -101,33 +101,13 @@ export async function getProcesses(req, res, next) {
       return searchable.includes(searchTerm);
     });
 
-    const processIds = filteredProcesses.map((processDoc) => processDoc._id);
-
-    const studentCounts = await Student.aggregate([
-      {
-        $match: {
-          processId: { $in: processIds },
-        },
-      },
-      {
-        $group: {
-          _id: "$processId",
-          count: { $sum: 1 },
-        },
-      },
-    ]);
-
-    const studentCountByProcessId = new Map(
-      studentCounts.map((item) => [String(item._id), item.count])
-    );
-
     const processes = filteredProcesses.map((processDoc) => ({
       id: String(processDoc._id),
       processName: processDoc.processName,
       processIdentifier: processDoc.processIdentifier,
       companyName: processDoc.companyName,
       roundCount: (processDoc.rounds || []).filter((round) => round.isActive !== false).length,
-      studentCount: studentCountByProcessId.get(String(processDoc._id)) || 0,
+      studentCount: (processDoc.students || []).length,
       updatedAt: processDoc.updatedAt,
     }));
 

@@ -172,7 +172,7 @@ export default function StudentsStepPage() {
 
           <section className="panel nav-section">
             <div className="button-row">
-              <Button variant="secondary" onClick={() => router.push("/")}>
+              <Button variant="secondary" onClick={() => router.push("/?mode=create")}>
                 Back: Process
               </Button>
             </div>

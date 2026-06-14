@@ -58,6 +58,13 @@ export default function RoundsStepPage() {
   const [roundDrafts, setRoundDrafts] = useState({});
   const [addRoundAck, setAddRoundAck] = useState("");
 
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
+
   const processDetailQuery = useQuery({
     queryKey: ["admin-process-detail", selectedProcessId],
     queryFn: () => fetchAdminProcess(selectedProcessId),
@@ -155,6 +162,7 @@ export default function RoundsStepPage() {
         queryKey: ["admin-process-detail", selectedProcessId],
       });
       queryClient.invalidateQueries({ queryKey: ["admin-process-list"] });
+      setAddRoundAck("Round deleted successfully.");
     },
   });
 
@@ -217,20 +225,19 @@ export default function RoundsStepPage() {
     });
   }
 
-  function onDeleteRound(roundId) {
+  function onDeleteRound(roundId, name) {
     if (!selectedProcessId) {
       return;
     }
 
-    const shouldDelete = window.confirm(
-      "Delete this round? Existing round results for this round will also be removed."
-    );
-
-    if (!shouldDelete) {
-      return;
-    }
-
-    deleteRoundMutation.mutate({ processId: selectedProcessId, roundId });
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Round Stage",
+      message: `Are you sure you want to delete the stage "${name}"? This will permanently remove all candidate progress records for this round.`,
+      onConfirm: () => {
+        deleteRoundMutation.mutate({ processId: selectedProcessId, roundId });
+      },
+    });
   }
 
   return (
@@ -252,7 +259,7 @@ export default function RoundsStepPage() {
         </section>
       ) : (
         <>
-          <section className="grid-two">
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <article className="panel">
               <h2 className="text-base font-bold tracking-tight mb-4 text-neutral-900 border-b border-neutral-100 pb-2">Add Stage</h2>
               <form className="stack" onSubmit={onAddRound}>
@@ -342,6 +349,7 @@ export default function RoundsStepPage() {
                 </div>
 
                 <Button type="submit" disabled={addRoundMutation.isPending} className="w-full justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   {addRoundMutation.isPending ? "Adding…" : "Add Stage"}
                 </Button>
               </form>
@@ -355,8 +363,12 @@ export default function RoundsStepPage() {
                 </div>
               ) : null}
             </article>
+            
             <article className="panel">
-              <h2 className="text-base font-bold tracking-tight mb-4 text-neutral-900 border-b border-neutral-100 pb-2">Rounds Timelines History</h2>
+              <div className="flex items-center gap-2 mb-4 pb-2 border-b border-neutral-100">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="12" y1="12" x2="16" y2="14"/></svg>
+                <h2 className="text-base font-bold tracking-tight text-neutral-900 mb-0">Rounds Timelines History</h2>
+              </div>
               {roundHistory.length === 0 ? (
                 <div className="flex h-36 items-center justify-center rounded-[6px] border border-dashed border-neutral-200 text-xs text-neutral-400">
                   No rounds created yet
@@ -393,13 +405,16 @@ export default function RoundsStepPage() {
           </section>
 
           <section className="panel mt-6">
-            <h2 className="text-base font-bold tracking-tight mb-4 text-neutral-900 border-b border-neutral-100 pb-2">Configure Stage Templates</h2>
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-neutral-100">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="2" y1="14" x2="6" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="18" y1="16" x2="22" y2="16"/></svg>
+              <h2 className="text-base font-bold tracking-tight text-neutral-900 mb-0">Configure Stage Templates</h2>
+            </div>
             {rounds.length === 0 ? (
               <div className="flex h-36 items-center justify-center rounded-[6px] border border-dashed border-neutral-200 text-xs text-neutral-400">
                 No active stages configured. Add a stage above.
               </div>
             ) : (
-              <div className="round-grid">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {rounds.map((round) => {
                   const draft = roundDrafts[round.id];
                   if (!draft) {
@@ -407,124 +422,128 @@ export default function RoundsStepPage() {
                   }
 
                   return (
-                    <article key={round.id} className="round-card border border-neutral-200/80 bg-neutral-50/20 p-4 rounded-[6px]">
-                      <header className="flex items-center justify-between pb-2 border-b border-neutral-100">
-                        <h3 className="text-xs font-bold text-neutral-900">{round.name}</h3>
-                        <small className="text-[10px] font-mono font-medium text-accent uppercase tracking-wider">{formatTypeLabel(round.type)}</small>
-                      </header>
+                    <article key={round.id} className="round-card border border-neutral-200 bg-neutral-50/30 p-4 rounded-[6px] flex flex-col justify-between">
+                      <div className="space-y-3">
+                        <header className="flex items-center justify-between pb-2 border-b border-neutral-100">
+                          <h3 className="text-xs font-bold text-neutral-900">{round.name}</h3>
+                          <small className="text-[10px] font-mono font-medium text-accent uppercase tracking-wider">{formatTypeLabel(round.type)}</small>
+                        </header>
 
-                      <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider mt-2">
-                        Display Name
-                        <Input
-                          value={draft.name}
-                          onChange={(event) =>
-                            setRoundDrafts((previous) => ({
-                              ...previous,
-                              [round.id]: {
-                                ...previous[round.id],
-                                name: event.target.value,
-                              },
-                            }))
-                          }
-                          className="mt-1"
-                        />
-                      </label>
-
-                      <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
-                        Stage Type
-                        <Select
-                          value={draft.type}
-                          onChange={(event) =>
-                            setRoundDrafts((previous) => ({
-                              ...previous,
-                              [round.id]: {
-                                ...previous[round.id],
-                                type: event.target.value,
-                              },
-                            }))
-                          }
-                          className="mt-1"
-                        >
-                          {roundTypeOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </Select>
-                      </label>
-
-                      <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
-                        Order Index
-                        <Input
-                          type="number"
-                          min="1"
-                          value={draft.order}
-                          onChange={(event) =>
-                            setRoundDrafts((previous) => ({
-                              ...previous,
-                              [round.id]: {
-                                ...previous[round.id],
-                                order: event.target.value,
-                              },
-                            }))
-                          }
-                          className="mt-1 font-mono"
-                        />
-                      </label>
-
-                      <div className="checkbox-row mt-1 py-1">
-                        <label className="text-[11px] text-neutral-600 flex items-center gap-1.5 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={draft.allowGroupNumber}
+                        <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider mt-2">
+                          Display Name
+                          <Input
+                            value={draft.name}
                             onChange={(event) =>
                               setRoundDrafts((previous) => ({
                                 ...previous,
                                 [round.id]: {
                                   ...previous[round.id],
-                                  allowGroupNumber: event.target.checked,
+                                  name: event.target.value,
                                 },
                               }))
                             }
-                            className="rounded-[3px] border-neutral-300 text-black focus:ring-black h-3.5 w-3.5"
+                            className="mt-1"
                           />
-                          Group Info
                         </label>
 
-                        <label className="text-[11px] text-neutral-600 flex items-center gap-1.5 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={draft.allowVenue}
+                        <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
+                          Stage Type
+                          <Select
+                            value={draft.type}
                             onChange={(event) =>
                               setRoundDrafts((previous) => ({
                                 ...previous,
                                 [round.id]: {
                                   ...previous[round.id],
-                                  allowVenue: event.target.checked,
+                                  type: event.target.value,
                                 },
                               }))
                             }
-                            className="rounded-[3px] border-neutral-300 text-black focus:ring-black h-3.5 w-3.5"
-                          />
-                          Venue Info
+                            className="mt-1"
+                          >
+                            {roundTypeOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </Select>
                         </label>
+
+                        <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
+                          Order Index
+                          <Input
+                            type="number"
+                            min="1"
+                            value={draft.order}
+                            onChange={(event) =>
+                              setRoundDrafts((previous) => ({
+                                ...previous,
+                                [round.id]: {
+                                  ...previous[round.id],
+                                  order: event.target.value,
+                                },
+                              }))
+                            }
+                            className="mt-1 font-mono"
+                          />
+                        </label>
+
+                        <div className="checkbox-row mt-1 py-1">
+                          <label className="text-[11px] text-neutral-600 flex items-center gap-1.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={draft.allowGroupNumber}
+                              onChange={(event) =>
+                                setRoundDrafts((previous) => ({
+                                  ...previous,
+                                  [round.id]: {
+                                    ...previous[round.id],
+                                    allowGroupNumber: event.target.checked,
+                                  },
+                                }))
+                              }
+                              className="rounded-[3px] border-neutral-300 text-black focus:ring-black h-3.5 w-3.5"
+                            />
+                            Group Info
+                          </label>
+
+                          <label className="text-[11px] text-neutral-600 flex items-center gap-1.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={draft.allowVenue}
+                              onChange={(event) =>
+                                setRoundDrafts((previous) => ({
+                                  ...previous,
+                                  [round.id]: {
+                                    ...previous[round.id],
+                                    allowVenue: event.target.checked,
+                                  },
+                                }))
+                              }
+                              className="rounded-[3px] border-neutral-300 text-black focus:ring-black h-3.5 w-3.5"
+                            />
+                            Venue Info
+                          </label>
+                        </div>
                       </div>
 
-                      <div className="button-row mt-4 justify-between w-full">
+                      <div className="flex gap-2 mt-4 justify-between w-full">
                         <Button
                           onClick={() => onSaveRound(round.id)}
                           disabled={updateRoundMutation.isPending}
                           variant="secondary"
-                          className="text-xs py-1.5 px-3"
+                          className="text-xs py-1.5 px-3 flex-1 justify-center"
                         >
-                          Save Changes
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                          Save
                         </Button>
                         <Button
                           variant="danger"
-                          onClick={() => onDeleteRound(round.id)}
+                          onClick={() => onDeleteRound(round.id, round.name)}
                           disabled={deleteRoundMutation.isPending}
-                          className="text-xs py-1.5 px-3"
+                          className="text-xs py-1.5 px-3 flex-1 justify-center"
                         >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                           Delete
                         </Button>
                       </div>
@@ -560,6 +579,36 @@ export default function RoundsStepPage() {
             </div>
           </section>
         </>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4 backdrop-blur-xs">
+          <div className="bg-white border border-neutral-200 w-full max-w-md p-6 rounded-lg shadow-xl animate-floatIn">
+            <div className="flex items-center gap-2 mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-600 mr-1"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <h3 className="text-base font-bold text-neutral-900 leading-none">{confirmModal.title}</h3>
+            </div>
+            <p className="text-xs text-neutral-600 mb-6 leading-relaxed">{confirmModal.message}</p>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  confirmModal.onConfirm();
+                  setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                }}
+              >
+                Confirm Delete
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </AdminLayout>
   );

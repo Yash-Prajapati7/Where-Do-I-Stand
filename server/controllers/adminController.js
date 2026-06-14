@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 
 import Process from "../models/Process.js";
 import RoundResult, { roundResultStatuses } from "../models/RoundResult.js";
-import Student from "../models/Student.js";
 import { parseStudentExcel } from "../services/excelImportService.js";
 import { publishProcessUpdate } from "../services/processEventService.js";
 import { assert, createHttpError } from "../utils/httpError.js";
@@ -139,28 +138,6 @@ async function findProcessById(processId) {
   return processDoc;
 }
 
-async function countStudentsByProcess(processIds) {
-  if (processIds.length === 0) {
-    return new Map();
-  }
-
-  const counts = await Student.aggregate([
-    {
-      $match: {
-        processId: { $in: processIds },
-      },
-    },
-    {
-      $group: {
-        _id: "$processId",
-        count: { $sum: 1 },
-      },
-    },
-  ]);
-
-  return new Map(counts.map((entry) => [String(entry._id), entry.count]));
-}
-
 function notifyProcessUpdate(processDoc, reason) {
   publishProcessUpdate(processDoc?.processIdentifier, {
     reason,
@@ -173,10 +150,6 @@ export async function listAdminProcesses(req, res, next) {
       .sort({ updatedAt: -1 })
       .lean();
 
-    const studentCounts = await countStudentsByProcess(
-      processDocs.map((processDoc) => processDoc._id)
-    );
-
     const processes = processDocs.map((processDoc) => {
       const roundCount = (processDoc.rounds || []).filter((round) => round.isActive !== false).length;
 
@@ -187,7 +160,7 @@ export async function listAdminProcesses(req, res, next) {
         companyName: processDoc.companyName,
         description: processDoc.description,
         roundCount,
-        studentCount: studentCounts.get(String(processDoc._id)) || 0,
+        studentCount: (processDoc.students || []).length,
         updatedAt: processDoc.updatedAt,
       };
     });
@@ -226,6 +199,7 @@ export async function createProcess(req, res, next) {
       companyName,
       description,
       rounds: [],
+      students: [],
       isArchived: false,
     });
 
@@ -242,7 +216,7 @@ export async function createProcess(req, res, next) {
 export async function getAdminProcess(req, res, next) {
   try {
     const processDoc = await findProcessById(req.params.processId);
-    const studentCount = await Student.countDocuments({ processId: processDoc._id });
+    const studentCount = (processDoc.students || []).length;
 
     res.status(200).json({
       process: {
@@ -391,50 +365,34 @@ export async function uploadStudentsFromExcel(req, res, next) {
       sapId: normalizeSapId(record.sapId),
     }));
 
-    const operations = records.map((record) => ({
-      updateOne: {
-        filter: {
-          processId: processDoc._id,
-          sapId: record.sapId,
-        },
-        update: {
-          $set: {
-            processId: processDoc._id,
-            sapId: record.sapId,
-            fullName: record.fullName,
-            branch: record.branch,
-          },
-        },
-        upsert: true,
-      },
-    }));
+    let insertedCount = 0;
+    let modifiedCount = 0;
+    let matchedCount = 0;
 
-    let bulkResult;
-    try {
-      bulkResult = await Student.bulkWrite(operations, {
-        ordered: false,
-      });
-    } catch (bulkError) {
-      // Handle MongoDB duplicate key and validation errors
-      if (bulkError.code === 11000) {
-        const keyPattern = bulkError.keyPattern || {};
-        const keyValue = bulkError.keyValue || {};
-        const fields = Object.keys(keyPattern);
-        const values = fields
-          .map((field) => `${field}: ${keyValue[field] === null || keyValue[field] === "" ? "empty/missing" : JSON.stringify(keyValue[field])}`)
-          .join(", ");
-        throw createHttpError(
-          `Duplicate student entry detected: ${values}. A student with this combination already exists in this process. Please verify your Excel file for duplicate SAP IDs.`,
-          409
-        );
-      }
-      // Re-throw if it's not a duplicate key error
-      throw bulkError;
+    if (!processDoc.students) {
+      processDoc.students = [];
     }
 
-    const insertedCount = bulkResult.upsertedCount || 0;
-    const modifiedCount = bulkResult.modifiedCount || 0;
-    const matchedCount = bulkResult.matchedCount || 0;
+    for (const record of records) {
+      const existingStudent = processDoc.students.find(
+        (s) => s.sapId === record.sapId
+      );
+
+      if (existingStudent) {
+        if (existingStudent.fullName !== record.fullName || existingStudent.branch !== record.branch) {
+          existingStudent.fullName = record.fullName;
+          existingStudent.branch = record.branch;
+          modifiedCount++;
+        } else {
+          matchedCount++;
+        }
+      } else {
+        processDoc.students.push(record);
+        insertedCount++;
+      }
+    }
+
+    await processDoc.save();
 
     notifyProcessUpdate(processDoc, "studentsUploaded");
 
@@ -461,9 +419,9 @@ export async function listProcessStudents(req, res, next) {
     const processDoc = await findProcessById(req.params.processId);
     const search = normalizeKey(req.query.search || "");
 
-    const students = await Student.find({ processId: processDoc._id })
-      .sort({ fullName: 1 })
-      .lean();
+    const students = [...(processDoc.students || [])].sort((a, b) =>
+      a.fullName.localeCompare(b.fullName)
+    );
 
     const roundResults = await RoundResult.find({ processId: processDoc._id }).lean();
 
@@ -538,7 +496,6 @@ export async function listProcessStudents(req, res, next) {
         };
       });
 
-
     res.status(200).json({
       process: serializeProcess(processDoc),
       students: payload,
@@ -558,25 +515,18 @@ export async function upsertStudentRoundResult(req, res, next) {
     const studentKey = normalizeText(req.params.studentId);
     assert(studentKey, "Student identifier is required.", 400);
 
-    let studentDoc = null;
+    let studentObj = null;
 
     if (mongoose.isValidObjectId(studentKey)) {
-      studentDoc = await Student.findOne({
-        _id: studentKey,
-        processId: processDoc._id,
-      });
+      studentObj = processDoc.students.find((s) => String(s._id) === studentKey);
     }
 
-    if (!studentDoc) {
+    if (!studentObj) {
       const sapId = normalizeSapId(studentKey);
-
-      studentDoc = await Student.findOne({
-        processId: processDoc._id,
-        sapId,
-      });
+      studentObj = processDoc.students.find((s) => s.sapId === sapId);
     }
 
-    if (!studentDoc) {
+    if (!studentObj) {
       throw createHttpError("Student not found for this process.", 404);
     }
 
@@ -620,7 +570,7 @@ export async function upsertStudentRoundResult(req, res, next) {
     const roundResult = await RoundResult.findOneAndUpdate(
       {
         processId: processDoc._id,
-        studentId: studentDoc._id,
+        studentId: studentObj._id,
         roundId: round._id,
       },
       {
@@ -637,9 +587,8 @@ export async function upsertStudentRoundResult(req, res, next) {
 
     res.status(200).json({
       processId: String(processDoc._id),
-      studentId: normalizeSapId(studentDoc.sapId),
-
-      studentDatabaseId: String(studentDoc._id),
+      studentId: normalizeSapId(studentObj.sapId),
+      studentDatabaseId: String(studentObj._id),
       roundId: String(round._id),
       roundResult: {
         id: String(roundResult._id),
@@ -651,6 +600,94 @@ export async function upsertStudentRoundResult(req, res, next) {
         metadata: roundResult.metadata || {},
         updatedAt: roundResult.updatedAt,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateProcessMetadata(req, res, next) {
+  try {
+    const processDoc = await findProcessById(req.params.processId);
+
+    if (typeof req.body.processName !== "undefined") {
+      const processName = normalizeText(req.body.processName);
+      assert(processName, "Process name cannot be empty.", 400);
+      processDoc.processName = processName;
+    }
+
+    if (typeof req.body.companyName !== "undefined") {
+      processDoc.companyName = normalizeText(req.body.companyName);
+    }
+
+    if (typeof req.body.description !== "undefined") {
+      processDoc.description = normalizeText(req.body.description);
+    }
+
+    await processDoc.save();
+    notifyProcessUpdate(processDoc, "processUpdated");
+
+    res.status(200).json({
+      process: serializeProcess(processDoc),
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteProcess(req, res, next) {
+  try {
+    const processId = req.params.processId;
+    if (!mongoose.isValidObjectId(processId)) {
+      throw createHttpError("Invalid process ID.", 400);
+    }
+
+    const processDoc = await Process.findById(processId);
+    if (!processDoc) {
+      throw createHttpError("Process not found.", 404);
+    }
+
+    await Process.deleteOne({ _id: processId });
+    await RoundResult.deleteMany({ processId });
+
+    notifyProcessUpdate(processDoc, "processDeleted");
+
+    res.status(200).json({
+      message: "Process and all associated records deleted successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteStudentFromProcess(req, res, next) {
+  try {
+    const { processId, sapId } = req.params;
+    const processDoc = await findProcessById(processId);
+
+    const studentIndex = processDoc.students.findIndex(
+      (s) => s.sapId === sapId || String(s._id) === sapId
+    );
+
+    if (studentIndex === -1) {
+      throw createHttpError("Student not found.", 404);
+    }
+
+    const studentId = processDoc.students[studentIndex]._id;
+
+    processDoc.students.splice(studentIndex, 1);
+    await processDoc.save();
+
+    await RoundResult.deleteMany({
+      processId: processDoc._id,
+      studentId: studentId,
+    });
+
+    notifyProcessUpdate(processDoc, "studentDeleted");
+
+    res.status(200).json({
+      message: "Student and their progress records deleted successfully.",
+      process: serializeProcess(processDoc),
     });
   } catch (error) {
     next(error);

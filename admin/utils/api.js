@@ -72,4 +72,19 @@ export async function updateStudentRoundResult(processId, studentId, roundId, pa
   return response.data;
 }
 
+export async function updateAdminProcessMetadata(processId, payload) {
+  const response = await api.patch(`/admin/processes/${processId}`, payload);
+  return response.data;
+}
+
+export async function deleteAdminProcess(processId) {
+  const response = await api.delete(`/admin/processes/${processId}`);
+  return response.data;
+}
+
+export async function deleteStudentFromProcess(processId, sapId) {
+  const response = await api.delete(`/admin/processes/${processId}/students/${sapId}`);
+  return response.data;
+}
+
 export default api;
