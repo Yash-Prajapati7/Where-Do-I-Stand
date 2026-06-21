@@ -23,6 +23,7 @@ function serializeRound(round) {
     type: round.type,
     order: round.order,
     isActive: round.isActive,
+    predefinedVenues: Array.isArray(round.predefinedVenues) ? round.predefinedVenues : [],
     metadataTemplate: {
       allowVenue: Boolean(round.metadataTemplate?.allowVenue),
       allowGroupNumber: Boolean(round.metadataTemplate?.allowGroupNumber),
@@ -45,6 +46,16 @@ function serializeProcess(processDoc) {
     companyName: processDoc.companyName,
     description: processDoc.description,
     rounds: sortedRounds.map(serializeRound),
+    statusColors: processDoc.statusColors instanceof Map
+      ? Object.fromEntries(processDoc.statusColors)
+      : processDoc.statusColors || {
+          notStarted: "#f3f4f6",
+          scheduled: "#dbeafe",
+          inProgress: "#fef3c7",
+          qualified: "#d1fae5",
+          rejected: "#fee2e2",
+          onHold: "#f3e8ff",
+        },
     isArchived: processDoc.isArchived,
     createdAt: processDoc.createdAt,
     updatedAt: processDoc.updatedAt,
@@ -257,6 +268,9 @@ export async function addRoundToProcess(req, res, next) {
       type,
       order,
       metadataTemplate,
+      predefinedVenues: Array.isArray(req.body.predefinedVenues)
+        ? req.body.predefinedVenues.map(v => normalizeText(v)).filter(Boolean)
+        : [],
       isActive: true,
     });
 
@@ -307,6 +321,11 @@ export async function updateProcessRound(req, res, next) {
         round.type,
         req.body.metadataTemplate
       );
+    }
+
+    if (typeof req.body.predefinedVenues !== "undefined") {
+      assert(Array.isArray(req.body.predefinedVenues), "Predefined venues must be an array.", 400);
+      round.predefinedVenues = req.body.predefinedVenues.map(v => normalizeText(v)).filter(Boolean);
     }
 
     processDoc.rounds.sort((a, b) => a.order - b.order);
@@ -622,6 +641,10 @@ export async function updateProcessMetadata(req, res, next) {
 
     if (typeof req.body.description !== "undefined") {
       processDoc.description = normalizeText(req.body.description);
+    }
+
+    if (typeof req.body.statusColors !== "undefined") {
+      processDoc.statusColors = req.body.statusColors;
     }
 
     await processDoc.save();

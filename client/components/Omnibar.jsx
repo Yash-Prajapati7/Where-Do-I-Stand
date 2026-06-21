@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/router";
 import { normalizeProcessInput } from "@/utils/api";
 
+import { Search } from "lucide-react";
+
 export default function Omnibar({ options, recentProcesses, setProcessName }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -95,12 +97,10 @@ export default function Omnibar({ options, recentProcesses, setProcessName }) {
           />
         )}
       </AnimatePresence>
-
+ 
       <div className="relative z-50 w-full max-w-lg mx-auto font-sans" ref={containerRef}>
         <div className="relative flex items-center group">
-          <svg className="absolute left-3 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-          </svg>
+          <Search className="absolute left-3 w-4 h-4 text-muted-foreground" />
           <input
             ref={inputRef}
             type="text"

@@ -11,6 +11,7 @@ import {
   fetchAdminProcess,
   fetchProcessStudents,
   updateStudentRoundResult,
+  updateProcessRound,
 } from "@/utils/api";
 
 const statusOptions = [
@@ -260,20 +261,106 @@ export default function ProgressStepPage() {
                 {(selectedRound?.metadataTemplate?.allowVenue ||
                   selectedRound?.type === "technicalInterview" ||
                   selectedRound?.type === "hrInterview") && (
-                  <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
-                    Venue Info
-                    <Input
-                      value={resultForm.venue}
-                      onChange={(event) =>
-                        setResultForm((previous) => ({
-                          ...previous,
-                          venue: event.target.value,
-                        }))
-                      }
-                      placeholder="e.g. Lab 4 or Placement Office"
-                      className="mt-1"
-                    />
-                  </label>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider block">
+                      Venue Selection
+                    </span>
+                    {selectedRound?.predefinedVenues && selectedRound.predefinedVenues.length > 0 && (
+                      <div className="flex gap-2 items-center">
+                        <Select
+                          value={selectedRound.predefinedVenues.includes(resultForm.venue) ? resultForm.venue : ""}
+                          onChange={(event) => {
+                            const val = event.target.value;
+                            setResultForm((previous) => ({
+                              ...previous,
+                              venue: val,
+                            }));
+                          }}
+                          className="flex-1 mt-0"
+                        >
+                          <option value="">-- Choose Predefined Venue --</option>
+                          {selectedRound.predefinedVenues.map((v) => (
+                            <option key={v} value={v}>
+                              {v}
+                            </option>
+                          ))}
+                        </Select>
+                        
+                        {resultForm.venue && selectedRound.predefinedVenues.includes(resultForm.venue) && (
+                          <Button
+                            type="button"
+                            variant="danger"
+                            title="Remove from predefined venues"
+                            className="h-9 px-3 text-xs flex-shrink-0"
+                            onClick={async () => {
+                              const updatedVenues = selectedRound.predefinedVenues.filter(v => v !== resultForm.venue);
+                              try {
+                                await updateProcessRound(selectedProcessId, selectedRound.id, {
+                                  name: selectedRound.name,
+                                  type: selectedRound.type,
+                                  order: selectedRound.order,
+                                  predefinedVenues: updatedVenues,
+                                });
+                                queryClient.invalidateQueries({
+                                  queryKey: ["admin-process-detail", selectedProcessId],
+                                });
+                                setResultForm((previous) => ({
+                                  ...previous,
+                                  venue: "",
+                                }));
+                              } catch (err) {
+                                console.error("Failed to remove venue adhoc:", err);
+                              }
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 items-center mt-1">
+                      <Input
+                        value={resultForm.venue}
+                        onChange={(event) =>
+                          setResultForm((previous) => ({
+                            ...previous,
+                            venue: event.target.value,
+                          }))
+                        }
+                        placeholder="e.g. Lab 4 or Placement Office"
+                        className="flex-1 mt-0"
+                      />
+
+                      {resultForm.venue.trim() && !selectedRound?.predefinedVenues?.includes(resultForm.venue.trim()) && (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          title="Save as Predefined"
+                          className="h-9 px-3 text-xs flex-shrink-0"
+                          onClick={async () => {
+                            const newVenue = resultForm.venue.trim();
+                            const updatedVenues = [...(selectedRound?.predefinedVenues || []), newVenue];
+                            try {
+                              await updateProcessRound(selectedProcessId, selectedRound.id, {
+                                name: selectedRound.name,
+                                type: selectedRound.type,
+                                order: selectedRound.order,
+                                predefinedVenues: updatedVenues,
+                              });
+                              queryClient.invalidateQueries({
+                                queryKey: ["admin-process-detail", selectedProcessId],
+                              });
+                            } catch (err) {
+                              console.error("Failed to add venue adhoc:", err);
+                            }
+                          }}
+                        >
+                          Save Predefined
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 {(selectedRound?.metadataTemplate?.allowGroupNumber ||

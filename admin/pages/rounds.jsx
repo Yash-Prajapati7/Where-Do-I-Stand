@@ -75,6 +75,48 @@ export default function RoundsStepPage() {
 
   const [roundDrafts, setRoundDrafts] = useState({});
   const [addRoundAck, setAddRoundAck] = useState("");
+  const [newVenueInputs, setNewVenueInputs] = useState({});
+
+  function handleAddPredefinedVenue(roundId) {
+    const venueText = (newVenueInputs[roundId] || "").trim();
+    if (!venueText) return;
+
+    setRoundDrafts((prev) => {
+      const draft = prev[roundId];
+      if (!draft) return prev;
+      const currentVenues = draft.predefinedVenues || [];
+      if (currentVenues.includes(venueText)) return prev;
+
+      return {
+        ...prev,
+        [roundId]: {
+          ...draft,
+          predefinedVenues: [...currentVenues, venueText],
+        },
+      };
+    });
+
+    setNewVenueInputs((prev) => ({
+      ...prev,
+      [roundId]: "",
+    }));
+  }
+
+  function handleRemovePredefinedVenue(roundId, indexToRemove) {
+    setRoundDrafts((prev) => {
+      const draft = prev[roundId];
+      if (!draft) return prev;
+      const currentVenues = draft.predefinedVenues || [];
+
+      return {
+        ...prev,
+        [roundId]: {
+          ...draft,
+          predefinedVenues: currentVenues.filter((_, idx) => idx !== indexToRemove),
+        },
+      };
+    });
+  }
 
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -130,6 +172,7 @@ export default function RoundsStepPage() {
             isActive: Boolean(round.isActive),
             allowVenue: Boolean(round.metadataTemplate?.allowVenue),
             allowGroupNumber: Boolean(round.metadataTemplate?.allowGroupNumber),
+            predefinedVenues: round.predefinedVenues || [],
           };
         }
       });
@@ -240,6 +283,7 @@ export default function RoundsStepPage() {
           allowVenue: Boolean(draft.allowVenue),
           allowGroupNumber: Boolean(draft.allowGroupNumber),
         },
+        predefinedVenues: draft.predefinedVenues || [],
       },
     });
   }
@@ -570,6 +614,57 @@ export default function RoundsStepPage() {
                             Venue Info
                           </label>
                         </div>
+
+                        {draft.allowVenue && (
+                          <div className="space-y-1.5 mt-2 pt-2 border-t border-neutral-100">
+                            <span className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider block">
+                              Predefined Venues
+                            </span>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="e.g. Lab 4"
+                                value={newVenueInputs[round.id] || ""}
+                                onChange={(e) =>
+                                  setNewVenueInputs((prev) => ({
+                                    ...prev,
+                                    [round.id]: e.target.value,
+                                  }))
+                                }
+                                className="flex-1 text-xs py-1 px-2 h-8"
+                              />
+                              <Button
+                                type="button"
+                                onClick={() => handleAddPredefinedVenue(round.id)}
+                                className="text-xs py-1 px-2.5 h-8 w-auto justify-center"
+                              >
+                                Add
+                              </Button>
+                            </div>
+                            {draft.predefinedVenues && draft.predefinedVenues.length > 0 ? (
+                              <div className="flex flex-wrap gap-1 mt-1.5">
+                                {draft.predefinedVenues.map((venue, index) => (
+                                  <span
+                                    key={index}
+                                    className="inline-flex items-center gap-1 bg-neutral-200/80 dark:bg-neutral-800 text-[10px] font-medium text-neutral-700 dark:text-neutral-300 px-2 py-0.5 rounded"
+                                  >
+                                    {venue}
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleRemovePredefinedVenue(round.id, index)
+                                      }
+                                      className="text-red-500 hover:text-red-700 font-bold ml-1 text-xs hover:scale-110 transition-transform"
+                                    >
+                                      &times;
+                                    </button>
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-[10px] text-neutral-400 italic">No venues predefined.</p>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex gap-2 mt-4 justify-between w-full">

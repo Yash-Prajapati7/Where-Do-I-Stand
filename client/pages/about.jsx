@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Menu } from "lucide-react";
 
 export default function AboutPage() {
   return (
@@ -21,11 +22,7 @@ export default function AboutPage() {
           aria-label="Open menu"
           onClick={() => alert("Menu: Home, FAQ")}
         >
-          <svg width="18" height="12" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="18" height="2" fill="#000" />
-            <rect y="5" width="18" height="2" fill="#000" />
-            <rect y="10" width="18" height="2" fill="#000" />
-          </svg>
+          <Menu className="w-5 h-5 text-black" />
         </button>
       </div>
 

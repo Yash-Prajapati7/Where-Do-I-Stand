@@ -17,7 +17,7 @@ function roundTypeLabel(roundType) {
     .replace(/(^\s*)\w/g, (match) => match.toUpperCase());
 }
 
-export default function KanbanColumn({ column, showDepartment = false }) {
+export default function KanbanColumn({ column, showDepartment = false, statusColors }) {
   const students = column.students || [];
   const listRef = useRef(null);
   const [showBottomFade, setShowBottomFade] = useState(false);
@@ -45,7 +45,7 @@ export default function KanbanColumn({ column, showDepartment = false }) {
 
   return (
     /* Fixed height on mobile (380px), full height on lg+ via flex-1 in KanbanBoard */
-    <section className="glass-panel bg-card border border-border rounded-lg flex flex-col w-full h-[380px] lg:h-full lg:min-w-[300px] lg:max-w-[360px] flex-shrink-0">
+    <section className="glass-panel bg-card border border-border rounded-lg flex flex-col w-full h-[380px] lg:h-full lg:min-w-[320px] lg:max-w-[400px] flex-shrink-0">
       {/* ---- Header (never scrolls) ---- */}
       <header className="flex-shrink-0 flex items-center justify-between px-4 pt-4 pb-3 border-b border-border">
         <div>
@@ -73,7 +73,7 @@ export default function KanbanColumn({ column, showDepartment = false }) {
       <div className="relative flex-1 overflow-hidden">
         <motion.div
           ref={listRef}
-          className="absolute inset-0 overflow-y-auto px-4 py-3 space-y-2 scrollbar-thin"
+          className="absolute inset-0 overflow-y-auto px-4 py-3 grid grid-cols-2 gap-2 content-start scrollbar-thin"
           initial="hidden"
           animate="visible"
           variants={{
@@ -85,7 +85,7 @@ export default function KanbanColumn({ column, showDepartment = false }) {
           }}
         >
           {students.length === 0 ? (
-            <p className="rounded-[6px] border border-dashed border-border bg-muted/20 p-4 text-xs text-muted-foreground text-center font-sans">
+            <p className="col-span-2 rounded-[6px] border border-dashed border-border bg-muted/20 p-4 text-xs text-muted-foreground text-center font-sans">
               No candidates in this stage yet.
             </p>
           ) : (
@@ -97,7 +97,7 @@ export default function KanbanColumn({ column, showDepartment = false }) {
                   visible: { opacity: 1, y: 0 },
                 }}
               >
-                <StudentCard student={student} showDepartment={showDepartment} />
+                <StudentCard student={student} showDepartment={showDepartment} statusColors={statusColors} />
               </motion.div>
             ))
           )}

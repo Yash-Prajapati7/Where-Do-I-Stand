@@ -79,6 +79,10 @@ const roundSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    predefinedVenues: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,
@@ -138,6 +142,18 @@ const processSchema = new mongoose.Schema(
     students: {
       type: [studentSchema],
       default: [],
+    },
+    statusColors: {
+      type: Map,
+      of: String,
+      default: () => ({
+        notStarted: "#f3f4f6",
+        scheduled: "#dbeafe",
+        inProgress: "#fef3c7",
+        qualified: "#d1fae5",
+        rejected: "#fee2e2",
+        onHold: "#f3e8ff",
+      }),
     },
     isArchived: {
       type: Boolean,

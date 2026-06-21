@@ -1,7 +1,7 @@
 import KanbanColumn from "@/components/KanbanColumn";
 import { ensureBoardShape } from "@/utils/sheetDataTransformer";
 
-export default function KanbanBoard({ board, showDepartment = false }) {
+export default function KanbanBoard({ board, showDepartment = false, statusColors }) {
   const columns = ensureBoardShape(board);
 
   if (columns.length === 0) {
@@ -22,6 +22,7 @@ export default function KanbanBoard({ board, showDepartment = false }) {
           key={column.roundId}
           column={column}
           showDepartment={showDepartment}
+          statusColors={statusColors}
         />
       ))}
     </div>

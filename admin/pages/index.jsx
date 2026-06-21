@@ -99,6 +99,14 @@ export default function ProcessStepPage() {
         processName: processDetail.processName || "",
         companyName: processDetail.companyName || "",
         description: processDetail.description || "",
+        statusColors: processDetail.statusColors || {
+          notStarted: "#f3f4f6",
+          scheduled: "#dbeafe",
+          inProgress: "#fef3c7",
+          qualified: "#d1fae5",
+          rejected: "#fee2e2",
+          onHold: "#f3e8ff",
+        },
       });
     }
   }, [processDetail]);
@@ -487,6 +495,59 @@ export default function ProcessStepPage() {
                         className="mt-1 font-sans"
                       />
                     </label>
+
+                    <div className="mt-4 pt-4 border-t border-neutral-100 mb-4">
+                      <h3 className="text-xs font-bold text-neutral-900 mb-2">Status Progress Colors (Pastel)</h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        {Object.entries(editForm.statusColors || {}).map(([statusKey, color]) => {
+                          const statusLabels = {
+                            notStarted: "Not Started",
+                            scheduled: "Scheduled",
+                            inProgress: "In Progress",
+                            qualified: "Qualified",
+                            rejected: "Rejected",
+                            onHold: "On Hold",
+                          };
+                          return (
+                            <label key={statusKey} className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider flex flex-col gap-1">
+                              {statusLabels[statusKey] || statusKey}
+                              <div className="flex gap-2 items-center">
+                                <input
+                                  type="color"
+                                  value={color || "#f3f4f6"}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setEditForm(prev => ({
+                                      ...prev,
+                                      statusColors: {
+                                        ...(prev.statusColors || {}),
+                                        [statusKey]: val,
+                                      }
+                                    }));
+                                  }}
+                                  className="h-8 w-12 rounded border border-neutral-200 cursor-pointer p-0"
+                                />
+                                <Input
+                                  value={color || ""}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setEditForm(prev => ({
+                                      ...prev,
+                                      statusColors: {
+                                        ...(prev.statusColors || {}),
+                                        [statusKey]: val,
+                                      }
+                                    }));
+                                  }}
+                                  placeholder="#ffffff"
+                                  className="flex-1 mt-0 text-xs py-1 px-2 font-mono h-8"
+                                />
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
 
                     <div className="flex justify-between items-center pt-2">
                       <Button variant="secondary" type="submit" disabled={updateProcessMutation.isPending}>

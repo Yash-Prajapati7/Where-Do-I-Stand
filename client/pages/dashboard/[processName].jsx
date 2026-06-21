@@ -15,6 +15,7 @@ import {
 } from "@/utils/filterUtils";
 import { normalizeProcessInput } from "@/utils/api";
 import { ensureBoardShape } from "@/utils/sheetDataTransformer";
+import { ArrowLeftFromLine, ChevronLeft, Funnel, Search, Menu } from "lucide-react";
 
 function syncToneClass(tone) {
   if (tone === "danger") {
@@ -202,7 +203,7 @@ export default function DashboardPage() {
     <main className="page-shell min-h-screen p-4 md:p-6 lg:h-screen lg:overflow-hidden bg-background">
       <div className="mx-auto flex h-full max-w-[1400px] flex-col gap-4">
         <motion.header
-          className="glass-panel rounded-lg p-4 md:p-5"
+          className="glass-panel rounded-lg p-3 md:p-3"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
@@ -212,27 +213,6 @@ export default function DashboardPage() {
               <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground md:text-3xl leading-none">
                 {processLabel}
               </h1>
-              <p className="mt-2 text-xs text-muted-foreground font-sans flex items-center gap-1.5 flex-wrap">
-                {sapId ? (
-                  <span className="inline-flex items-center gap-1">
-                    SAP ID: <span className="font-mono text-foreground font-medium bg-muted px-1.5 py-0.5 rounded-[4px] border border-border">{sapId}</span>
-                    <button
-                      type="button"
-                      onClick={() => setSapId("")}
-                      className="text-red-500 hover:text-red-700 font-semibold text-[10px] ml-1 px-1 rounded hover:bg-red-50 transition"
-                      title="Clear SAP ID filter"
-                    >
-                      Clear
-                    </button>
-                  </span>
-                ) : (
-                  <span>All Candidates shown</span>
-                )}
-                <span className="opacity-40">&bull;</span>
-                <span>{visibleCount} Cards</span>
-                <span className="opacity-40">&bull;</span>
-                <span>{roundCount} Stages</span>
-              </p>
             </div>
 
             {/* Desktop Navigation */}
@@ -242,82 +222,32 @@ export default function DashboardPage() {
                 role="status"
                 aria-live="polite"
               >
-                <div className="flex items-center gap-1.5 font-medium">
-                  <span className={`h-1.5 w-1.5 rounded-full ${syncStatus.tone === "success" ? "bg-emerald-500" : "bg-amber-500"} animate-pulse`} />
-                  {syncStatus.label}
-                </div>
-                <div className="text-[10px] opacity-80 font-mono">Synced {syncStatus.lastSyncLabel}</div>
+                <div className="text-[10px] opacity-80 font-mono">Updated {syncStatus.lastSyncLabel}</div>
               </div>
 
               <div className="flex items-center gap-2">
                 <IconButton label="Search by SAP ID" onClick={() => setSearchOpen(true)}>
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
-                  >
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="M20 20l-3.5-3.5" />
-                  </svg>
+                  <Search />
                 </IconButton>
 
                 <IconButton label="Filters" onClick={() => setFiltersOpen(true)}>
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-4 w-4"
-                  >
-                    <path d="M4 5h16l-6 7v6l-4 2v-8L4 5z" />
-                  </svg>
+                  <Funnel />
                 </IconButton>
               </div>
 
               <Button variant="secondary" onClick={() => router.push("/")}>
-                Change Process
+                <ChevronLeft/> <span>Change Process</span>
               </Button>
             </div>
 
             {/* Mobile Navigation */}
             <div className="flex md:hidden items-center gap-2 relative">
               <IconButton label="Search by SAP ID" onClick={() => setSearchOpen(true)}>
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-4 w-4"
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="M20 20l-3.5-3.5" />
-                </svg>
+                <Search />
               </IconButton>
 
               <IconButton label="Open Menu" onClick={() => setMenuOpen(!menuOpen)}>
-                <svg
-                  width="18"
-                  height="12"
-                  viewBox="0 0 18 12"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-foreground"
-                >
-                  <rect width="18" height="2" fill="currentColor" />
-                  <rect y="5" width="18" height="2" fill="currentColor" />
-                  <rect y="10" width="18" height="2" fill="currentColor" />
-                </svg>
+                <Menu className="h-5 w-5 text-foreground" />
               </IconButton>
 
               <AnimatePresence>
@@ -334,11 +264,7 @@ export default function DashboardPage() {
                       role="status"
                       aria-live="polite"
                     >
-                      <div className="flex items-center gap-1.5 font-medium">
-                        <span className={`h-1.5 w-1.5 rounded-full ${syncStatus.tone === "success" ? "bg-emerald-500" : "bg-amber-500"} animate-pulse`} />
-                        {syncStatus.label}
-                      </div>
-                      <div className="text-[10px] opacity-80 font-mono">Synced {syncStatus.lastSyncLabel}</div>
+                      <div className="text-[10px] opacity-80 font-mono">Updated {syncStatus.lastSyncLabel}</div>
                     </div>
 
                     <Button
@@ -349,18 +275,7 @@ export default function DashboardPage() {
                       }}
                       className="w-full justify-start text-xs h-9 px-3"
                     >
-                      <svg
-                        aria-hidden="true"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="h-3.5 w-3.5 mr-2"
-                      >
-                        <path d="M4 5h16l-6 7v6l-4 2v-8L4 5z" />
-                      </svg>
+                      <Funnel className="h-3.5 w-3.5 mr-2" />
                       Filters
                     </Button>
 
@@ -425,7 +340,7 @@ export default function DashboardPage() {
                   </Button>
                 </div>
               ) : (
-                <KanbanBoard board={filteredBoard} showDepartment={showDepartment} />
+                <KanbanBoard board={filteredBoard} showDepartment={showDepartment} statusColors={data?.process?.statusColors} />
               )}
             </div>
           ) : null}

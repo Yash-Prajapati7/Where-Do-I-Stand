@@ -88,6 +88,7 @@ function normalizeRound(round) {
       allowGroupNumber: false,
       customFields: [],
     },
+    predefinedVenues: round.predefinedVenues || [],
     isActive: round.isActive,
   };
 }
@@ -208,6 +209,16 @@ export function buildProcessBoard({ processDoc, students, roundResults, filters 
       companyName: processDoc.companyName,
       description: processDoc.description,
       rounds: sortedRounds.map(normalizeRound),
+      statusColors: processDoc.statusColors instanceof Map
+        ? Object.fromEntries(processDoc.statusColors)
+        : processDoc.statusColors || {
+            notStarted: "#f3f4f6",
+            scheduled: "#dbeafe",
+            inProgress: "#fef3c7",
+            qualified: "#d1fae5",
+            rejected: "#fee2e2",
+            onHold: "#f3e8ff",
+          },
     },
     board: filteredColumns,
     waiting,
