@@ -8,6 +8,7 @@ import {
   Save,
   Trash2,
   AlertTriangle,
+  GripVertical,
 } from "lucide-react";
 
 import AdminLayout from "@/components/AdminLayout";
@@ -141,6 +142,80 @@ export default function RoundsStepPage() {
 
     return processDetail.processName || processDetail.processIdentifier || "";
   }, [processDetail]);
+
+  const [orderedRounds, setOrderedRounds] = useState([]);
+  const [draggingIndex, setDraggingIndex] = useState(null);
+
+  useEffect(() => {
+    if (rounds) {
+      setOrderedRounds([...rounds].sort((a, b) => (a.order || 0) - (b.order || 0)));
+    }
+  }, [rounds]);
+
+  const handleDragStart = (e, index) => {
+    setDraggingIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (e, targetIndex) => {
+    e.preventDefault();
+    if (draggingIndex === null || draggingIndex === targetIndex) return;
+
+    const updated = [...orderedRounds];
+    const [draggedItem] = updated.splice(draggingIndex, 1);
+    updated.splice(targetIndex, 0, draggedItem);
+
+    setOrderedRounds(updated);
+    setDraggingIndex(null);
+
+    try {
+      const promises = updated.map((round, idx) => {
+        const newOrder = idx + 1;
+        const draft = roundDrafts[round.id] || {};
+        
+        if (round.order !== newOrder) {
+          setRoundDrafts((prev) => {
+            if (prev[round.id]) {
+              return {
+                ...prev,
+                [round.id]: {
+                  ...prev[round.id],
+                  order: String(newOrder),
+                },
+              };
+            }
+            return prev;
+          });
+
+          return updateProcessRound(selectedProcessId, round.id, {
+            name: draft.name || round.name,
+            type: draft.type || round.type,
+            order: newOrder,
+            isActive: draft.isActive !== undefined ? draft.isActive : round.isActive,
+            metadataTemplate: {
+              allowVenue: draft.allowVenue !== undefined ? draft.allowVenue : round.metadataTemplate?.allowVenue,
+              allowGroupNumber: draft.allowGroupNumber !== undefined ? draft.allowGroupNumber : round.metadataTemplate?.allowGroupNumber,
+            },
+            predefinedVenues: draft.predefinedVenues || round.predefinedVenues || [],
+          });
+        }
+        return null;
+      }).filter(Boolean);
+
+      if (promises.length > 0) {
+        await Promise.all(promises);
+        queryClient.invalidateQueries({
+          queryKey: ["admin-process-detail", selectedProcessId],
+        });
+      }
+    } catch (err) {
+      console.error("Failed to save reordered rounds:", err);
+    }
+  };
 
   useEffect(() => {
     setAddRoundAck("");
@@ -504,17 +579,31 @@ export default function RoundsStepPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {rounds.map((round) => {
+                {orderedRounds.map((round, index) => {
                   const draft = roundDrafts[round.id];
                   if (!draft) {
                     return null;
                   }
 
                   return (
-                    <article key={round.id} className="round-card border border-neutral-200 bg-neutral-50/30 p-4 rounded-[6px] flex flex-col justify-between">
+                    <article
+                      key={round.id}
+                      draggable={true}
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDrop={(e) => handleDrop(e, index)}
+                      className={`round-card border border-neutral-200 bg-neutral-50/30 p-4 rounded-[6px] flex flex-col justify-between transition-all duration-200 ${
+                        draggingIndex === index ? "opacity-40 scale-95 border-dashed border-accent" : ""
+                      }`}
+                    >
                       <div className="space-y-3">
                         <header className="flex items-center justify-between pb-2 border-b border-neutral-100">
-                          <h3 className="text-xs font-bold text-neutral-900">{round.name}</h3>
+                          <div className="flex items-center gap-2">
+                            <div className="cursor-grab active:cursor-grabbing text-neutral-400 hover:text-neutral-600 transition duration-150">
+                              <GripVertical size={14} />
+                            </div>
+                            <h3 className="text-xs font-bold text-neutral-900">{round.name}</h3>
+                          </div>
                           <small className="text-[10px] font-mono font-medium text-accent uppercase tracking-wider">{formatTypeLabel(round.type)}</small>
                         </header>
 

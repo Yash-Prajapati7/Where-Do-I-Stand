@@ -125,7 +125,19 @@ export function buildProcessBoard({ processDoc, students, roundResults, filters 
   const visibleStudentIds = new Set();
   const waiting = [];
 
+  // Group roundResults by studentId to find the one with the latest updatedAt (their active/target stage)
+  const latestResultByStudent = new Map();
   roundResults.forEach((result) => {
+    const studentId = String(result.studentId);
+    const existing = latestResultByStudent.get(studentId);
+    if (!existing || new Date(result.updatedAt) > new Date(existing.updatedAt)) {
+      latestResultByStudent.set(studentId, result);
+    }
+  });
+
+  const filteredRoundResults = Array.from(latestResultByStudent.values());
+
+  filteredRoundResults.forEach((result) => {
     const studentId = String(result.studentId);
     const roundId = String(result.roundId);
 

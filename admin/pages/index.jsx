@@ -6,17 +6,12 @@ import {
   Settings,
   Rocket,
   Sliders,
-  FileSpreadsheet,
-  UserCheck,
-  Search,
-  Trash2,
   AlertTriangle,
 } from "lucide-react";
 
 import AdminLayout from "@/components/AdminLayout";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import Select from "@/components/ui/Select";
 import useSelectedProcessId from "@/hooks/useSelectedProcessId";
 import {
   createAdminProcess,
@@ -24,9 +19,6 @@ import {
   fetchAdminProcesses,
   updateAdminProcessMetadata,
   deleteAdminProcess,
-  deleteStudentFromProcess,
-  uploadStudentsFile,
-  fetchProcessStudents,
 } from "@/utils/api";
 
 export default function ProcessStepPage() {
@@ -49,8 +41,6 @@ export default function ProcessStepPage() {
     description: "",
   });
 
-  const [studentSearch, setStudentSearch] = useState("");
-  const [uploadFile, setUploadFile] = useState(null);
   const [feedbackMessage, setFeedbackMessage] = useState(null);
 
   const [confirmModal, setConfirmModal] = useState({
@@ -83,14 +73,6 @@ export default function ProcessStepPage() {
   });
 
   const processDetail = processDetailQuery.data?.process || null;
-
-  const processStudentsQuery = useQuery({
-    queryKey: ["admin-process-students", selectedProcessId],
-    queryFn: () => fetchProcessStudents(selectedProcessId),
-    enabled: Boolean(selectedProcessId) && flowMode === "manage",
-  });
-
-  const studentsList = processStudentsQuery.data?.students || [];
 
   // Populate edit form when process details are fetched
   useEffect(() => {
@@ -165,39 +147,6 @@ export default function ProcessStepPage() {
     },
   });
 
-  const deleteStudentMutation = useMutation({
-    mutationFn: ({ id, sapId }) => deleteStudentFromProcess(id, sapId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-process-students", selectedProcessId] });
-      queryClient.invalidateQueries({ queryKey: ["admin-process-detail", selectedProcessId] });
-      queryClient.invalidateQueries({ queryKey: ["admin-process-list"] });
-      setFeedbackMessage({ type: "success", text: "Candidate deleted successfully." });
-    },
-    onError: (err) => {
-      setFeedbackMessage({
-        type: "error",
-        text: err.response?.data?.message || err.message,
-      });
-    },
-  });
-
-  const uploadStudentsMutation = useMutation({
-    mutationFn: ({ id, file }) => uploadStudentsFile(id, file),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-process-list"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-process-detail", selectedProcessId] });
-      queryClient.invalidateQueries({ queryKey: ["admin-process-students", selectedProcessId] });
-      setUploadFile(null);
-      setFeedbackMessage({ type: "success", text: "Students imported successfully!" });
-    },
-    onError: (err) => {
-      setFeedbackMessage({
-        type: "error",
-        text: err.response?.data?.message || err.message,
-      });
-    },
-  });
-
   function onCreateProcess(event) {
     event.preventDefault();
     createProcessMutation.mutate({
@@ -228,38 +177,6 @@ export default function ProcessStepPage() {
     });
   }
 
-  function onDeleteStudent(sapId, fullName) {
-    if (!selectedProcessId) return;
-    setConfirmModal({
-      isOpen: true,
-      title: "Delete Candidate Data",
-      message: `Are you sure you want to remove ${fullName} (SAP ID: ${sapId}) and all their evaluation progress from this process?`,
-      onConfirm: () => {
-        deleteStudentMutation.mutate({ id: selectedProcessId, sapId });
-      },
-    });
-  }
-
-  function onUploadStudents(event) {
-    event.preventDefault();
-    if (!selectedProcessId || !uploadFile) return;
-    uploadStudentsMutation.mutate({
-      id: selectedProcessId,
-      file: uploadFile,
-    });
-  }
-
-  const filteredStudents = useMemo(() => {
-    if (!studentSearch.trim()) return studentsList;
-    const query = studentSearch.toLowerCase().trim();
-    return studentsList.filter(
-      (s) =>
-        (s.fullName || "").toLowerCase().includes(query) ||
-        (s.sapId || "").toLowerCase().includes(query) ||
-        (s.branch || "").toLowerCase().includes(query)
-    );
-  }, [studentsList, studentSearch]);
-
   const pageTitle = useMemo(() => {
     if (flowMode === "create") return "Step 1: Guided Process Setup";
     if (flowMode === "manage") return "Process Dashboard";
@@ -270,7 +187,7 @@ export default function ProcessStepPage() {
     if (flowMode === "create")
       return "Configure process details step-by-step. Let's start by initializing the new recruitment process cohort.";
     if (flowMode === "manage")
-      return "Direct operations panel. Update details, manage candidate rosters, configure round formats, or record status progress.";
+      return "Direct operations panel. Update details, configure round formats, or record status progress.";
     return "Select how you'd like to work with placement processes. Launch a guided creation workflow, or modify details of existing ones.";
   }, [flowMode]);
 
@@ -431,73 +348,129 @@ export default function ProcessStepPage() {
       {/* 3. Manage Dashboard View */}
       {flowMode === "manage" && (
         <div className="space-y-6">
-          {/* Active Process Selection Header */}
-          <article className="panel">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <label className="w-full sm:max-w-md text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
-                Select Process to Work With
-                <Select
-                  value={selectedProcessId}
-                  onChange={(event) => setSelectedProcessId(event.target.value)}
-                  className="mt-1"
-                >
-                  <option value="">-- Choose Process --</option>
-                  {processes.map((processItem) => (
-                    <option key={processItem.id} value={processItem.id}>
-                      {processItem.processName} ({processItem.studentCount} candidates)
-                    </option>
-                  ))}
-                </Select>
-              </label>
-              <Button variant="secondary" onClick={() => setFlowMode(null)} className="sm:self-end">
-                &larr; Exit to Hub
-              </Button>
-            </div>
-          </article>
+          {!selectedProcessId ? (
+            <article className="panel flex flex-col justify-center items-center text-center p-12 border-dashed border-2">
+              <div className="mb-4 text-neutral-400">
+                <Settings size={40} strokeWidth={1.5} />
+              </div>
+              <h3 className="text-base font-bold text-neutral-700 mb-2">No Process Selected</h3>
+              <p className="text-xs text-neutral-400 max-w-sm leading-relaxed mb-6">
+                To manage details, please choose an active recruitment process from the **Active Process** selector dropdown at the top right of the navigation header.
+              </p>
+              <div className="flex gap-4">
+                <Button variant="secondary" onClick={() => setFlowMode(null)}>
+                  &larr; Exit to Hub
+                </Button>
+                <Button variant="primary" onClick={() => setFlowMode("create")}>
+                  Create New Process
+                </Button>
+              </div>
+            </article>
+          ) : processDetail ? (
+            <div className="space-y-6">
+              {/* Overview Header Card */}
+              <article className="panel flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 className="text-lg font-bold text-neutral-900 mb-1">
+                    Managing: {processDetail.processName}
+                  </h2>
+                  <p className="text-xs text-neutral-500">
+                    Company: <span className="font-semibold text-neutral-700">{processDetail.companyName || "-"}</span> | Identifier: <span className="font-mono text-neutral-700">{processDetail.processIdentifier}</span>
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="secondary" onClick={() => setFlowMode(null)}>
+                    &larr; Exit to Hub
+                  </Button>
+                </div>
+              </article>
 
-          {selectedProcessId && processDetail ? (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              
-              {/* Settings Column */}
-              <div className="col-span-12 lg:col-span-4 space-y-6">
-                <article className="panel">
-                  <div className="flex items-center gap-2 mb-4 pb-2 border-b border-neutral-100">
-                    <Sliders size={20} className="text-neutral-500" />
-                    <h2 className="text-base font-bold tracking-tight text-neutral-900 mb-0">
-                      Process Settings
-                    </h2>
+              {/* Dashboard Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                {/* Info & Settings Column */}
+                <div className="col-span-12 lg:col-span-7 space-y-6">
+                  {/* Overview Stats */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="panel flex flex-col justify-center p-4 bg-neutral-50 border border-neutral-100">
+                      <span className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider uppercase">Candidates</span>
+                      <span className="text-2xl font-bold text-neutral-900 mt-1">{processDetail.studentCount || 0}</span>
+                    </div>
+                    <div className="panel flex flex-col justify-center p-4 bg-neutral-50 border border-neutral-100">
+                      <span className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider uppercase">Rounds Configured</span>
+                      <span className="text-2xl font-bold text-neutral-900 mt-1">{processDetail.rounds.length}</span>
+                    </div>
                   </div>
-                  <form className="stack" onSubmit={onUpdateProcess}>
-                    <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
-                      Process Name
-                      <Input
-                        value={editForm.processName}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, processName: e.target.value }))}
-                        required
-                        className="mt-1"
-                      />
-                    </label>
 
-                    <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
-                      Company Name
-                      <Input
-                        value={editForm.companyName}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, companyName: e.target.value }))}
-                        className="mt-1"
-                      />
-                    </label>
+                  <article className="panel">
+                    <div className="flex items-center gap-2 mb-4 pb-2 border-b border-neutral-100">
+                      <Sliders size={20} className="text-neutral-500" />
+                      <h2 className="text-base font-bold tracking-tight text-neutral-900 mb-0">
+                        Process Settings
+                      </h2>
+                    </div>
+                    <form className="stack" onSubmit={onUpdateProcess}>
+                      <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
+                        Process Name
+                        <Input
+                          value={editForm.processName}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, processName: e.target.value }))}
+                          required
+                          className="mt-1"
+                        />
+                      </label>
 
-                    <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
-                      Description
-                      <textarea
-                        value={editForm.description}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
-                        className="mt-1 font-sans"
-                      />
-                    </label>
+                      <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
+                        Company Name
+                        <Input
+                          value={editForm.companyName}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, companyName: e.target.value }))}
+                          className="mt-1"
+                        />
+                      </label>
 
-                    <div className="mt-4 pt-4 border-t border-neutral-100 mb-4">
-                      <h3 className="text-xs font-bold text-neutral-900 mb-2">Status Progress Colors (Pastel)</h3>
+                      <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
+                        Description
+                        <textarea
+                          value={editForm.description}
+                          onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                          className="mt-1 font-sans"
+                        />
+                      </label>
+
+                      <div className="flex justify-between items-center pt-4 border-t border-neutral-100 mt-4">
+                        <Button variant="secondary" type="submit" disabled={updateProcessMutation.isPending}>
+                          {updateProcessMutation.isPending ? "Saving..." : "Save Changes"}
+                        </Button>
+                        <Button variant="danger" onClick={onDeleteProcess} disabled={deleteProcessMutation.isPending}>
+                          {deleteProcessMutation.isPending ? "Deleting..." : "Delete Process"}
+                        </Button>
+                      </div>
+                    </form>
+                  </article>
+                </div>
+
+                {/* Operations & Colors Column */}
+                <div className="col-span-12 lg:col-span-5 space-y-6">
+                  <article className="panel">
+                    <h2 className="text-base font-bold tracking-tight mb-4 text-neutral-900 border-b border-neutral-100 pb-2">
+                      Operational Directory
+                    </h2>
+                    <div className="stack gap-3">
+                      <Button variant="primary" onClick={() => router.push("/students")} className="w-full justify-center py-2.5">
+                        Manage Candidates ({processDetail.studentCount} profiles)
+                      </Button>
+                      <Button variant="primary" onClick={() => router.push("/rounds")} className="w-full justify-center py-2.5">
+                        Configure Rounds ({processDetail.rounds.length} stages)
+                      </Button>
+                      <Button variant="primary" onClick={() => router.push("/progress")} className="w-full justify-center py-2.5">
+                        Update Candidate Progress
+                      </Button>
+                    </div>
+                  </article>
+
+                  <article className="panel">
+                    <h3 className="text-xs font-bold text-neutral-900 mb-3 pb-2 border-b border-neutral-100">Status Progress Colors</h3>
+                    <form className="stack" onSubmit={onUpdateProcess}>
                       <div className="grid grid-cols-2 gap-3">
                         {Object.entries(editForm.statusColors || {}).map(([statusKey, color]) => {
                           const statusLabels = {
@@ -547,122 +520,14 @@ export default function ProcessStepPage() {
                           );
                         })}
                       </div>
-                    </div>
-
-                    <div className="flex justify-between items-center pt-2">
-                      <Button variant="secondary" type="submit" disabled={updateProcessMutation.isPending}>
-                        {updateProcessMutation.isPending ? "Saving..." : "Save Changes"}
-                      </Button>
-                      <Button variant="danger" onClick={onDeleteProcess} disabled={deleteProcessMutation.isPending}>
-                        {deleteProcessMutation.isPending ? "Deleting..." : "Delete Process"}
-                      </Button>
-                    </div>
-                  </form>
-                </article>
-
-                <article className="panel">
-                  <h2 className="text-base font-bold tracking-tight mb-4 text-neutral-900 border-b border-neutral-100 pb-2">
-                    Quick Operations
-                  </h2>
-                  <div className="stack gap-3">
-                    <Button variant="primary" onClick={() => router.push("/rounds")} className="w-full justify-center">
-                      Configure Rounds ({processDetail.rounds.length})
-                    </Button>
-                    <Button variant="primary" onClick={() => router.push("/progress")} className="w-full justify-center">
-                      Update Candidate Progress
-                    </Button>
-                  </div>
-                </article>
-              </div>
-
-              {/* Roster / Students Column */}
-              <div className="col-span-12 lg:col-span-8 space-y-6">
-                
-                {/* Excel Import Inline */}
-                <article className="panel">
-                  <div className="flex items-center gap-2 mb-4 pb-2 border-b border-neutral-100">
-                    <FileSpreadsheet size={20} className="text-neutral-500" />
-                    <h2 className="text-base font-bold tracking-tight text-neutral-900 mb-0">
-                      Import Student Excel
-                    </h2>
-                  </div>
-                  <form className="flex flex-col sm:flex-row items-end gap-3" onSubmit={onUploadStudents}>
-                    <label className="flex-1 text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
-                      Upload Excel file (.xlsx)
-                      <Input
-                        type="file"
-                        accept=".xlsx,.xls"
-                        onChange={(event) => setUploadFile(event.target.files?.[0] || null)}
-                        required
-                        className="mt-1 block w-full text-xs text-neutral-500 file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-[10px] file:font-mono file:font-semibold file:bg-neutral-100 file:text-neutral-800 file:cursor-pointer hover:file:bg-neutral-200"
-                      />
-                    </label>
-                    <Button type="submit" disabled={!uploadFile || uploadStudentsMutation.isPending} className="w-full sm:w-auto">
-                      {uploadStudentsMutation.isPending ? "Uploading..." : "Upload & Import"}
-                    </Button>
-                  </form>
-                </article>
-
-                {/* Candidates Roster List */}
-                <article className="panel">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-2 border-b border-neutral-100">
-                    <div className="flex items-center">
-                      <UserCheck size={20} className="text-neutral-500 mr-2" />
-                      <h2 className="text-base font-bold tracking-tight text-neutral-900 mb-0">
-                        Candidates Roster ({filteredStudents.length})
-                      </h2>
-                    </div>
-                    <div className="relative w-full sm:max-w-xs">
-                      <Search size={16} className="text-neutral-400 absolute left-3 top-2.5" />
-                      <Input
-                        placeholder="Search roster..."
-                        value={studentSearch}
-                        onChange={(e) => setStudentSearch(e.target.value)}
-                        className="pl-9"
-                      />
-                    </div>
-                  </div>
-
-                  {filteredStudents.length === 0 ? (
-                    <div className="flex h-36 items-center justify-center rounded-[6px] border border-dashed border-neutral-200 text-xs text-neutral-400">
-                      {studentSearch ? "No students matching search criteria." : "No candidates imported yet. Upload an Excel list above."}
-                    </div>
-                  ) : (
-                    <div className="table-wrap max-h-96 overflow-y-auto border border-neutral-200 rounded-[6px]">
-                      <table className="history-table w-full">
-                        <thead>
-                          <tr>
-                            <th>Name</th>
-                            <th>SAP ID</th>
-                            <th>Branch</th>
-                            <th className="text-right">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredStudents.map((student) => (
-                            <tr key={student.studentDatabaseId || student.id}>
-                              <td className="font-semibold text-neutral-950">{student.fullName}</td>
-                              <td className="font-mono">{student.sapId}</td>
-                              <td>{student.branch || "-"}</td>
-                              <td className="text-right">
-                                <button
-                                  type="button"
-                                  onClick={() => onDeleteStudent(student.sapId, student.fullName)}
-                                  className="text-red-600 hover:text-red-950 font-medium text-xs px-2.5 py-1 rounded hover:bg-red-50 transition flex items-center gap-1 ml-auto"
-                                  disabled={deleteStudentMutation.isPending}
-                                >
-                                  <Trash2 size={12} className="inline" />
-                                  Delete
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </article>
-
+                      <div className="pt-4 mt-2">
+                        <Button variant="secondary" type="submit" disabled={updateProcessMutation.isPending} className="w-full justify-center">
+                          {updateProcessMutation.isPending ? "Saving Colors..." : "Save Colors"}
+                        </Button>
+                      </div>
+                    </form>
+                  </article>
+                </div>
               </div>
             </div>
           ) : (

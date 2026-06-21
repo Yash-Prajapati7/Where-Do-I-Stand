@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "wdis:admin:selected-process-id";
+const SYNC_EVENT = "wdis:admin:process-sync";
 
 function safeRead() {
   if (typeof window === "undefined") {
@@ -44,17 +45,42 @@ export default function useSelectedProcessId() {
     setSelectedProcessId(safeRead());
   }, [hydrated]);
 
+  const updateSelectedProcessId = (newId) => {
+    setSelectedProcessId(newId);
+    safeWrite(newId);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(SYNC_EVENT, { detail: newId }));
+    }
+  };
+
   useEffect(() => {
-    if (!hydrated) {
+    if (typeof window === "undefined") {
       return;
     }
 
-    safeWrite(selectedProcessId);
-  }, [hydrated, selectedProcessId]);
+    const handleSync = (e) => {
+      setSelectedProcessId(e.detail);
+    };
+
+    const handleStorage = (e) => {
+      if (e.key === STORAGE_KEY) {
+        setSelectedProcessId(e.newValue || "");
+      }
+    };
+
+    window.addEventListener(SYNC_EVENT, handleSync);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener(SYNC_EVENT, handleSync);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   return {
     hydrated,
     selectedProcessId,
-    setSelectedProcessId,
+    setSelectedProcessId: updateSelectedProcessId,
   };
 }
+
