@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
+import {
+  Plus,
+  History,
+  Sliders,
+  Save,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react";
 
 import AdminLayout from "@/components/AdminLayout";
 import Button from "@/components/ui/Button";
@@ -21,6 +29,15 @@ const roundTypeOptions = [
   { value: "aptitude", label: "Aptitude Test" },
   { value: "codingTest", label: "Coding Test" },
   { value: "custom", label: "Custom" },
+];
+
+const predefinedRounds = [
+  { value: "groupDiscussion", label: "Group Discussion", type: "groupDiscussion" },
+  { value: "technicalInterview", label: "Technical Interview", type: "technicalInterview" },
+  { value: "hrInterview", label: "HR Interview", type: "hrInterview" },
+  { value: "aptitude", label: "Aptitude Test", type: "aptitude" },
+  { value: "codingTest", label: "Coding Test", type: "codingTest" },
+  { value: "custom", label: "Custom", type: "custom" },
 ];
 
 function formatTypeLabel(type) {
@@ -48,8 +65,9 @@ export default function RoundsStepPage() {
   const { selectedProcessId } = useSelectedProcessId();
 
   const [newRoundForm, setNewRoundForm] = useState({
-    name: "",
-    type: "custom",
+    name: "Group Discussion",
+    type: "groupDiscussion",
+    selectedNameOption: "groupDiscussion",
     order: "",
     allowVenue: false,
     allowGroupNumber: false,
@@ -136,8 +154,9 @@ export default function RoundsStepPage() {
       );
 
       setNewRoundForm({
-        name: "",
-        type: "custom",
+        name: "Group Discussion",
+        type: "groupDiscussion",
+        selectedNameOption: "groupDiscussion",
         order: "",
         allowVenue: false,
         allowGroupNumber: false,
@@ -264,20 +283,46 @@ export default function RoundsStepPage() {
               <h2 className="text-base font-bold tracking-tight mb-4 text-neutral-900 border-b border-neutral-100 pb-2">Add Stage</h2>
               <form className="stack" onSubmit={onAddRound}>
                 <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
-                  Stage / Round Name
-                  <Input
-                    value={newRoundForm.name}
-                    onChange={(event) =>
+                  Select Round Name
+                  <Select
+                    value={newRoundForm.selectedNameOption}
+                    onChange={(event) => {
+                      const val = event.target.value;
+                      const matchedOption = predefinedRounds.find(opt => opt.value === val);
                       setNewRoundForm((previous) => ({
                         ...previous,
-                        name: event.target.value,
-                      }))
-                    }
-                    placeholder="e.g. Technical Interview"
-                    required
+                        selectedNameOption: val,
+                        name: val === "custom" ? "" : (matchedOption ? matchedOption.label : ""),
+                        type: val === "custom" ? "custom" : (matchedOption ? matchedOption.type : "custom"),
+                      }));
+                    }}
                     className="mt-1"
-                  />
+                  >
+                    {predefinedRounds.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
                 </label>
+
+                {newRoundForm.selectedNameOption === "custom" && (
+                  <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
+                    Custom Stage / Round Name
+                    <Input
+                      value={newRoundForm.name}
+                      onChange={(event) =>
+                        setNewRoundForm((previous) => ({
+                          ...previous,
+                          name: event.target.value,
+                        }))
+                      }
+                      placeholder="e.g. Managerial Round"
+                      required
+                      className="mt-1"
+                    />
+                  </label>
+                )}
 
                 <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
                   Stage Type
@@ -349,7 +394,7 @@ export default function RoundsStepPage() {
                 </div>
 
                 <Button type="submit" disabled={addRoundMutation.isPending} className="w-full justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  <Plus size={14} strokeWidth={2.5} className="mr-1.5" />
                   {addRoundMutation.isPending ? "Adding…" : "Add Stage"}
                 </Button>
               </form>
@@ -366,7 +411,7 @@ export default function RoundsStepPage() {
             
             <article className="panel">
               <div className="flex items-center gap-2 mb-4 pb-2 border-b border-neutral-100">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/><line x1="12" y1="7" x2="12" y2="12"/><line x1="12" y1="12" x2="16" y2="14"/></svg>
+                <History size={20} className="text-neutral-500" />
                 <h2 className="text-base font-bold tracking-tight text-neutral-900 mb-0">Rounds Timelines History</h2>
               </div>
               {roundHistory.length === 0 ? (
@@ -406,7 +451,7 @@ export default function RoundsStepPage() {
 
           <section className="panel mt-6">
             <div className="flex items-center gap-2 mb-4 pb-2 border-b border-neutral-100">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="2" y1="14" x2="6" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="18" y1="16" x2="22" y2="16"/></svg>
+              <Sliders size={20} className="text-neutral-500" />
               <h2 className="text-base font-bold tracking-tight text-neutral-900 mb-0">Configure Stage Templates</h2>
             </div>
             {rounds.length === 0 ? (
@@ -534,7 +579,7 @@ export default function RoundsStepPage() {
                           variant="secondary"
                           className="text-xs py-1.5 px-3 flex-1 justify-center"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                          <Save size={12} strokeWidth={2.5} className="mr-1" />
                           Save
                         </Button>
                         <Button
@@ -543,7 +588,7 @@ export default function RoundsStepPage() {
                           disabled={deleteRoundMutation.isPending}
                           className="text-xs py-1.5 px-3 flex-1 justify-center"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                          <Trash2 size={12} strokeWidth={2.5} className="mr-1" />
                           Delete
                         </Button>
                       </div>
@@ -586,7 +631,7 @@ export default function RoundsStepPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4 backdrop-blur-xs">
           <div className="bg-white border border-neutral-200 w-full max-w-md p-6 rounded-lg shadow-xl animate-floatIn">
             <div className="flex items-center gap-2 mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-600 mr-1"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <AlertTriangle size={20} strokeWidth={2.5} className="text-red-600 mr-1" />
               <h3 className="text-base font-bold text-neutral-900 leading-none">{confirmModal.title}</h3>
             </div>
             <p className="text-xs text-neutral-600 mb-6 leading-relaxed">{confirmModal.message}</p>

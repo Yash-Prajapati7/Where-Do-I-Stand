@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 import StudentCard from "@/components/StudentCard";
@@ -14,42 +14,47 @@ function roundTypeLabel(roundType) {
 
   return roundType
     .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/(^|\s)\w/g, (match) => match.toUpperCase());
+    .replace(/(^\s*)\w/g, (match) => match.toUpperCase());
 }
 
-export default function KanbanColumn({ column }) {
+export default function KanbanColumn({ column, showDepartment = false }) {
   const students = column.students || [];
-  const scrollRef = useRef(null);
-  const [showMoreHint, setShowMoreHint] = useState(false);
+  const listRef = useRef(null);
+  const [showBottomFade, setShowBottomFade] = useState(false);
 
   useEffect(() => {
-    const element = scrollRef.current;
-    if (!element) {
-      return undefined;
-    }
+    const el = listRef.current;
+    if (!el) return;
 
-    const updateHint = () => {
-      const hasOverflow = element.scrollHeight > element.clientHeight + 1;
-      const atBottom = element.scrollTop + element.clientHeight >= element.scrollHeight - 1;
-      setShowMoreHint(hasOverflow && !atBottom);
+    const update = () => {
+      const hasOverflow = el.scrollHeight > el.clientHeight + 2;
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+      setShowBottomFade(hasOverflow && !atBottom);
     };
 
-    updateHint();
-    element.addEventListener("scroll", updateHint, { passive: true });
-    window.addEventListener("resize", updateHint);
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
 
     return () => {
-      element.removeEventListener("scroll", updateHint);
-      window.removeEventListener("resize", updateHint);
+      el.removeEventListener("scroll", update);
+      ro.disconnect();
     };
   }, [students.length]);
 
   return (
-    <section className="glass-panel flex min-h-[320px] w-full flex-col rounded-lg p-4 lg:min-h-0 lg:h-full lg:min-w-[320px] lg:max-w-[360px] bg-card border border-border">
-      <header className="mb-4 flex items-center justify-between border-b border-border pb-3">
+    /* Fixed height on mobile (380px), full height on lg+ via flex-1 in KanbanBoard */
+    <section className="glass-panel bg-card border border-border rounded-lg flex flex-col w-full h-[380px] lg:h-full lg:min-w-[300px] lg:max-w-[360px] flex-shrink-0">
+      {/* ---- Header (never scrolls) ---- */}
+      <header className="flex-shrink-0 flex items-center justify-between px-4 pt-4 pb-3 border-b border-border">
         <div>
-          <h2 className="text-sm font-semibold tracking-tight text-foreground">{column.roundName}</h2>
-          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground uppercase tracking-wider">Stage {column.order}</p>
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">
+            {column.roundName}
+          </h2>
+          <p className="mt-0.5 font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
+            Stage {column.order}
+          </p>
         </div>
 
         <div className="flex flex-col items-end gap-1">
@@ -57,28 +62,25 @@ export default function KanbanColumn({ column }) {
             {students.length}
           </span>
           <span
-            className={`rounded-[4px] border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-[0.05em] ${roundTypeTone(
-              column.roundType
-            )}`}
+            className={`rounded-[4px] border px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-[0.05em] ${roundTypeTone(column.roundType)}`}
           >
             {roundTypeLabel(column.roundType)}
           </span>
         </div>
       </header>
 
-      <div className="relative min-h-0 flex-1">
+      {/* ---- Scrollable student list ---- */}
+      <div className="relative flex-1 overflow-hidden">
         <motion.div
-          ref={scrollRef}
-          className="min-h-0 space-y-2 overflow-y-auto pb-10 pr-1 lg:overflow-y-hidden"
+          ref={listRef}
+          className="absolute inset-0 overflow-y-auto px-4 py-3 space-y-2 scrollbar-thin"
           initial="hidden"
           animate="visible"
           variants={{
             hidden: { opacity: 0 },
             visible: {
               opacity: 1,
-              transition: {
-                staggerChildren: 0.05,
-              },
+              transition: { staggerChildren: 0.04 },
             },
           }}
         >
@@ -95,21 +97,21 @@ export default function KanbanColumn({ column }) {
                   visible: { opacity: 1, y: 0 },
                 }}
               >
-                <StudentCard student={student} />
+                <StudentCard student={student} showDepartment={showDepartment} />
               </motion.div>
             ))
           )}
         </motion.div>
 
-        {showMoreHint ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-2">
+        {/* Bottom fade + scroll hint */}
+        {showBottomFade && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-card to-transparent flex items-end justify-center pb-1.5">
             <span className="rounded-full border border-border bg-card px-2.5 py-0.5 text-[10px] font-mono text-muted-foreground shadow-xs">
-              ... overflow
+              scroll ↓
             </span>
           </div>
-        ) : null}
+        )}
       </div>
     </section>
   );
 }
-

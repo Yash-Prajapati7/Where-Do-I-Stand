@@ -56,7 +56,7 @@ function filterStudents(students, criteria) {
     const matchesRound =
       roundFilter === "all" || roundFilter === round || roundFilter === roundId;
 
-    const matchesSap = !sapFilterEnabled || (sapId && studentSapId && studentSapId === sapId);
+    const matchesSap = !sapFilterEnabled || !sapId || studentSapId === sapId;
 
     return matchesSearch && matchesStatus && matchesRound && matchesSap;
   });

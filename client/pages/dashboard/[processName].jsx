@@ -104,7 +104,9 @@ export default function DashboardPage() {
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [draftSapId, setDraftSapId] = useState("");
+  const [showDepartment, setShowDepartment] = useState(false);
   const sapInputRef = useRef(null);
 
   const hydrateFromStorage = useProcessStore((state) => state.hydrateFromStorage);
@@ -162,8 +164,9 @@ export default function DashboardPage() {
   useEffect(() => {
     if (processName) {
       setProcessName(processName);
+      setSapId(""); // Clear SAP ID to show the entire board initially
     }
-  }, [processName, setProcessName]);
+  }, [processName, setProcessName, setSapId]);
 
   useEffect(() => {
     if (!searchOpen) {
@@ -206,17 +209,24 @@ export default function DashboardPage() {
         >
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-[220px]">
-              <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-accent">Real-Time Progression</p>
               <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground md:text-3xl leading-none">
                 {processLabel}
               </h1>
               <p className="mt-2 text-xs text-muted-foreground font-sans flex items-center gap-1.5 flex-wrap">
                 {sapId ? (
-                  <>
+                  <span className="inline-flex items-center gap-1">
                     SAP ID: <span className="font-mono text-foreground font-medium bg-muted px-1.5 py-0.5 rounded-[4px] border border-border">{sapId}</span>
-                  </>
+                    <button
+                      type="button"
+                      onClick={() => setSapId("")}
+                      className="text-red-500 hover:text-red-700 font-semibold text-[10px] ml-1 px-1 rounded hover:bg-red-50 transition"
+                      title="Clear SAP ID filter"
+                    >
+                      Clear
+                    </button>
+                  </span>
                 ) : (
-                  <span>SAP ID not configured</span>
+                  <span>All Candidates shown</span>
                 )}
                 <span className="opacity-40">&bull;</span>
                 <span>{visibleCount} Cards</span>
@@ -225,7 +235,8 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-3">
               <div
                 className={`rounded-[6px] border px-3 py-1.5 text-xs shadow-xs transition-colors flex flex-col gap-0.5 ${syncToneClass(syncStatus.tone)}`}
                 role="status"
@@ -275,6 +286,98 @@ export default function DashboardPage() {
                 Change Process
               </Button>
             </div>
+
+            {/* Mobile Navigation */}
+            <div className="flex md:hidden items-center gap-2 relative">
+              <IconButton label="Search by SAP ID" onClick={() => setSearchOpen(true)}>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3.5-3.5" />
+                </svg>
+              </IconButton>
+
+              <IconButton label="Open Menu" onClick={() => setMenuOpen(!menuOpen)}>
+                <svg
+                  width="18"
+                  height="12"
+                  viewBox="0 0 18 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-foreground"
+                >
+                  <rect width="18" height="2" fill="currentColor" />
+                  <rect y="5" width="18" height="2" fill="currentColor" />
+                  <rect y="10" width="18" height="2" fill="currentColor" />
+                </svg>
+              </IconButton>
+
+              <AnimatePresence>
+                {menuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-12 z-50 w-56 rounded-lg border border-border bg-card p-3 shadow-lg flex flex-col gap-3"
+                  >
+                    <div
+                      className={`rounded-[6px] border px-3 py-1.5 text-xs shadow-xs transition-colors flex flex-col gap-0.5 ${syncToneClass(syncStatus.tone)}`}
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <span className={`h-1.5 w-1.5 rounded-full ${syncStatus.tone === "success" ? "bg-emerald-500" : "bg-amber-500"} animate-pulse`} />
+                        {syncStatus.label}
+                      </div>
+                      <div className="text-[10px] opacity-80 font-mono">Synced {syncStatus.lastSyncLabel}</div>
+                    </div>
+
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setFiltersOpen(true);
+                        setMenuOpen(false);
+                      }}
+                      className="w-full justify-start text-xs h-9 px-3"
+                    >
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-3.5 w-3.5 mr-2"
+                      >
+                        <path d="M4 5h16l-6 7v6l-4 2v-8L4 5z" />
+                      </svg>
+                      Filters
+                    </Button>
+
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        router.push("/");
+                        setMenuOpen(false);
+                      }}
+                      className="w-full justify-start text-xs h-9 px-3"
+                    >
+                      Change Process
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </motion.header>
 
@@ -310,18 +413,8 @@ export default function DashboardPage() {
           ) : null}
 
           {board.length > 0 && !isLoading ? (
-            <div className="min-h-0 flex-1">
-              {!sapId ? (
-                <div className="glass-panel flex h-64 flex-col items-center justify-center rounded-lg p-6 max-w-md mx-auto mt-12 text-center">
-                  <h2 className="text-base font-semibold">Identification Required</h2>
-                  <p className="mt-1 text-xs text-muted-foreground max-w-xs">
-                    Please use the search icon above to enter your SAP ID and view your recruitment progress.
-                  </p>
-                  <Button className="mt-4" onClick={() => setSearchOpen(true)}>
-                    Enter SAP ID
-                  </Button>
-                </div>
-              ) : visibleCount === 0 ? (
+            <div className="min-h-0 flex-1 h-full">
+              {sapId && visibleCount === 0 ? (
                 <div className="glass-panel flex h-64 flex-col items-center justify-center rounded-lg p-6 max-w-md mx-auto mt-12 text-center">
                   <h2 className="text-base font-semibold">No Records Found</h2>
                   <p className="mt-1 text-xs text-muted-foreground max-w-xs">
@@ -332,7 +425,7 @@ export default function DashboardPage() {
                   </Button>
                 </div>
               ) : (
-                <KanbanBoard board={filteredBoard} />
+                <KanbanBoard board={filteredBoard} showDepartment={showDepartment} />
               )}
             </div>
           ) : null}
@@ -448,6 +541,29 @@ export default function DashboardPage() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="sm:col-span-2 pt-1 border-t border-border">
+            <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-2">
+              Display Options
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowDepartment((prev) => !prev)}
+              className={`inline-flex items-center gap-2 rounded-[6px] border px-3 py-2 text-xs font-medium transition-all shadow-sm ${
+                showDepartment
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card text-foreground border-border hover:border-foreground/40"
+              }`}
+              aria-pressed={showDepartment}
+            >
+              <span
+                className={`inline-block h-2 w-2 rounded-full transition-colors ${
+                  showDepartment ? "bg-background" : "bg-muted-foreground"
+                }`}
+              />
+              {showDepartment ? "Hide Department Names" : "Show Department Names"}
+            </button>
           </div>
         </div>
       </DashboardModal>

@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
+import {
+  Sparkles,
+  Settings,
+  Rocket,
+  Sliders,
+  FileSpreadsheet,
+  UserCheck,
+  Search,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react";
 
 import AdminLayout from "@/components/AdminLayout";
 import Button from "@/components/ui/Button";
@@ -293,7 +304,7 @@ export default function ProcessStepPage() {
           >
             <div>
               <div className="mb-3 text-accent">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5Z"/><path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/></svg>
+                <Sparkles size={32} strokeWidth={1.5} />
               </div>
               <h2 className="text-lg font-bold text-neutral-900 mb-2">Create New Process</h2>
               <p className="text-xs text-neutral-500 leading-relaxed mb-6">
@@ -311,7 +322,7 @@ export default function ProcessStepPage() {
           >
             <div>
               <div className="mb-3 text-neutral-600">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                <Settings size={32} strokeWidth={1.5} />
               </div>
               <h2 className="text-lg font-bold text-neutral-900 mb-2">Work with Existing Process</h2>
               <p className="text-xs text-neutral-500 leading-relaxed mb-6">
@@ -392,7 +403,7 @@ export default function ProcessStepPage() {
 
           <article className="panel flex flex-col justify-center items-center text-center p-8 border-dashed border-2">
             <div className="mb-4 text-accent">
-              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.25-2.5 3.5-2.5 3.5s2.25-1 3.5-2.5L13 10l-2.5-2.5Z"/><path d="m12 5 9-3-3 9-6-6Z"/><path d="M9 15c-1.25-1.5-3.5-2.5-3.5-2.5s1-2.25 2.5-3.5L13 14Z"/><path d="M15 9s1 1 2 2 2-1 2-1-1-1-2-2-2 1-2 1Z"/></svg>
+              <Rocket size={36} strokeWidth={1.5} />
             </div>
             <h3 className="text-sm font-bold text-neutral-700 mb-2">Guided Setup Progress</h3>
             <p className="text-xs text-neutral-400 max-w-xs leading-relaxed mb-4">
@@ -443,7 +454,7 @@ export default function ProcessStepPage() {
               <div className="col-span-12 lg:col-span-4 space-y-6">
                 <article className="panel">
                   <div className="flex items-center gap-2 mb-4 pb-2 border-b border-neutral-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="2" y1="14" x2="6" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="18" y1="16" x2="22" y2="16"/></svg>
+                    <Sliders size={20} className="text-neutral-500" />
                     <h2 className="text-base font-bold tracking-tight text-neutral-900 mb-0">
                       Process Settings
                     </h2>
@@ -509,7 +520,7 @@ export default function ProcessStepPage() {
                 {/* Excel Import Inline */}
                 <article className="panel">
                   <div className="flex items-center gap-2 mb-4 pb-2 border-b border-neutral-100">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2v2H8z"/><path d="M12 13h4v2h-4z"/><path d="M8 17h2v2H8z"/><path d="M12 17h4v2h-4z"/></svg>
+                    <FileSpreadsheet size={20} className="text-neutral-500" />
                     <h2 className="text-base font-bold tracking-tight text-neutral-900 mb-0">
                       Import Student Excel
                     </h2>
@@ -535,13 +546,13 @@ export default function ProcessStepPage() {
                 <article className="panel">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-2 border-b border-neutral-100">
                     <div className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500 mr-2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                      <UserCheck size={20} className="text-neutral-500 mr-2" />
                       <h2 className="text-base font-bold tracking-tight text-neutral-900 mb-0">
                         Candidates Roster ({filteredStudents.length})
                       </h2>
                     </div>
                     <div className="relative w-full sm:max-w-xs">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400 absolute left-3 top-2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      <Search size={16} className="text-neutral-400 absolute left-3 top-2.5" />
                       <Input
                         placeholder="Search roster..."
                         value={studentSearch}
@@ -579,7 +590,7 @@ export default function ProcessStepPage() {
                                   className="text-red-600 hover:text-red-950 font-medium text-xs px-2.5 py-1 rounded hover:bg-red-50 transition flex items-center gap-1 ml-auto"
                                   disabled={deleteStudentMutation.isPending}
                                 >
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2 inline"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                  <Trash2 size={12} className="inline" />
                                   Delete
                                 </button>
                               </td>
@@ -608,7 +619,7 @@ export default function ProcessStepPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4 backdrop-blur-xs">
           <div className="bg-white border border-neutral-200 w-full max-w-md p-6 rounded-lg shadow-xl transition-all scale-100 animate-floatIn">
             <div className="flex items-center gap-2 mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-600 mr-1"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <AlertTriangle size={20} strokeWidth={2.5} className="text-red-600 mr-1" />
               <h3 className="text-base font-bold text-neutral-900 leading-none">{confirmModal.title}</h3>
             </div>
             <p className="text-xs text-neutral-600 mb-6 leading-relaxed">{confirmModal.message}</p>

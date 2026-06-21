@@ -1,16 +1,16 @@
 import { memo } from "react";
 
-function StudentCard({ student }) {
+function StudentCard({ student, showDepartment = false }) {
   const sapId = String(student.sapId || "").trim() || "-";
 
   return (
     <article className="rounded-[6px] border border-border bg-card p-3.5 shadow-sm hover:border-foreground/20 transition-all select-none duration-150">
       <div className="flex items-start justify-between gap-2">
-        <h3 className="text-xs font-semibold text-foreground tracking-tight line-clamp-1">
+        <h3 className="text-xs font-semibold text-foreground tracking-tight line-clamp-1 flex-1">
           {student.fullName || "Unnamed"}
         </h3>
-        {student.branch && (
-          <span className="font-mono text-[9px] text-muted-foreground uppercase border border-border/80 px-1 py-0.5 rounded-[3px] bg-muted/40">
+        {showDepartment && student.branch && (
+          <span className="flex-shrink-0 font-mono text-[9px] text-muted-foreground uppercase border border-border/80 px-1 py-0.5 rounded-[3px] bg-muted/40">
             {student.branch}
           </span>
         )}
@@ -27,4 +27,3 @@ function StudentCard({ student }) {
 }
 
 export default memo(StudentCard);
-
