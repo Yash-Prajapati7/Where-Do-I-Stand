@@ -139,9 +139,9 @@ textarea {
 .admin-shell {
   margin: 0 auto;
   width: min(1200px, 100%);
-  padding: 2rem 1.5rem;
+  padding: 1.5rem 1.5rem;
   display: grid;
-  gap: 1.5rem;
+  gap: 1rem;
   position: relative;
   isolation: isolate;
 }
@@ -419,8 +419,8 @@ textarea {
   justify-content: space-between;
   gap: 1rem;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 0.75rem;
-  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .step-nav-items {
