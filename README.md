@@ -1,75 +1,67 @@
-# WDIS - Where Do I Stand
+# Where Do I Stand (WDIS)
 
-WDIS is a full-stack placement tracking platform with a dynamic round-based student dashboard and a dedicated admin console.
+Where Do I Stand (WDIS) is a real-time placement tracking platform. It replaces legacy spreadsheet-based updates with a modern web platform. WDIS features a dynamic round-based student dashboard and a dedicated administrative console.
 
-This build replaces the old Google Sheets polling model with a custom MongoDB-backed backend and admin-controlled workflow.
+## Architecture
 
-## Highlights
+This diagram shows the system architecture and data flow between the admin application, student client, backend service, and database.
 
-- Multi-process placement tracking (company/process scoped)
-- Dynamic round creation and ordering
-- Excel upload + validation + student ingestion
-- Per-student round result updates (`status`, `venue`, `groupNumber`, `remarks`)
-- Dynamic student board rendering (no hardcoded round columns)
-- Mobile-friendly row-based board flow
-- Separate student app (`client`) and admin app (`admin`)
+```mermaid
+graph TD
+    subgraph Frontends [Frontend Applications]
+        AdminApp[Admin Console /admin]
+        ClientApp[Student Dashboard /client]
+    end
 
-## Tech Stack
+    subgraph Backend [Express Server /server]
+        API[REST API Endpoints]
+        SSE[Server-Sent Events Service]
+    end
 
-- Student frontend: Next.js + React + Tailwind + React Query + Zustand
-- Admin frontend: Next.js + React Query + Axios + custom CSS
-- Backend: Node.js (ES Modules), Express, Mongoose
-- Database: MongoDB
+    subgraph Storage [Database]
+        Mongo[(MongoDB)]
+    end
+
+    AdminApp -->|HTTP Mutate Requests| API
+    ClientApp -->|HTTP GET Requests| API
+    
+    API -->|Read & Write| Mongo
+    
+    API -->|Trigger Local Events| SSE
+    SSE -.->|Push updates via SSE| ClientApp
+    SSE -.->|Push updates via SSE| AdminApp
+```
 
 ## Project Structure
 
-```text
-WDIS/
-├── admin/
-│   ├── components/
-│   ├── pages/
-│   ├── styles/
-│   └── utils/
-├── client/
-│   ├── components/
-│   ├── hooks/
-│   ├── pages/
-│   ├── store/
-│   ├── styles/
-│   └── utils/
-├── server/
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── services/
-│   ├── utils/
-│   ├── app.js
-│   └── server.js
-├── Reference.md
-├── .env.example
-├── docker-compose.yml
-└── README.md
+The project is structured as a monorepo containing three main applications:
+
+- **server**: Node.js Express server connected to MongoDB.
+- **admin**: Next.js application for placement administrators to configure rounds, upload student details, and assign groups or venues.
+- **client**: Next.js student-facing dashboard showing placement rounds progress.
+
+## Tech Stack
+
+- **Student Frontend**: Next.js, React, Tailwind CSS, React Query, Zustand.
+- **Admin Frontend**: Next.js, React Query, Axios, CSS.
+- **Backend**: Node.js, Express, Mongoose.
+- **Database**: MongoDB.
+
+## Getting Started
+
+### Environment Variables
+
+Copy the example environment file in the root directory:
+
+```bash
+cp .env.example .env
 ```
 
-## Environment Variables
+Ensure the database URI and backend ports match your local configuration.
 
-Copy `.env.example` to `.env` in the root and update values.
+### Local Installation
 
-Backend:
-- `MONGODB_URI` (default: `mongodb://localhost:27017/wdis`)
-- `MONGODB_DB_NAME` (optional)
-- `BACKEND_PORT` (default: `8080`)
-- `FRONTEND_ORIGIN` (comma-separated allowed origins)
-
-Frontend/Admin:
-- `NEXT_PUBLIC_API_BASE_URL` (default: `http://localhost:8080/api`)
-- `NEXT_PUBLIC_DEFAULT_POLL_INTERVAL_MS` (client only, default: `2500`)
-
-## Local Development
-
-Install dependencies:
+Install dependencies for all folders:
 
 ```bash
 npm install
@@ -78,64 +70,21 @@ npm install --prefix client
 npm install --prefix admin
 ```
 
-Run all apps:
+Run all services concurrently:
 
 ```bash
 npm run dev
 ```
 
-Expected local services:
-- Student app: `http://localhost:3000`
-- Admin app: `http://localhost:3001`
-- Backend API: `http://localhost:8080`
-- MongoDB: `mongodb://localhost:27017/wdis` (if running locally)
+The services will be available at:
+- Student App: http://localhost:3000
+- Admin App: http://localhost:3001
+- Backend API: http://localhost:8080
 
-## Docker Development
+### Running with Docker
+
+To build and launch the database and applications together:
 
 ```bash
 docker compose up
 ```
-
-This starts:
-- `mongo`
-- `server`
-- `client`
-- `admin`
-
-## API Overview
-
-Public API:
-- `GET /api/health`
-- `GET /api/processes`
-- `GET /api/process/:processName`
-
-Admin API:
-- `GET /api/admin/processes`
-- `POST /api/admin/processes`
-- `GET /api/admin/processes/:processId`
-- `GET /api/admin/processes/:processId/students`
-- `POST /api/admin/processes/:processId/students/upload`
-- `POST /api/admin/processes/:processId/rounds`
-- `PATCH /api/admin/processes/:processId/rounds/:roundId`
-- `DELETE /api/admin/processes/:processId/rounds/:roundId`
-- `PATCH /api/admin/processes/:processId/students/:studentId/rounds/:roundId` (studentId may be a MongoDB ObjectId or a SAP ID)
-
-## Excel Upload Expectations
-
-Required columns (aliases supported):
-- SAP ID (`SAP ID`, `SAPID`, `StudentID`, `RollNumber`, `RegNo`, etc.)
-- Name (`Name`, `Student Name`, etc.)
-
-Optional columns:
-- Email, Phone, Branch, and any additional columns
-
-Additional columns are mapped into student `metadata`.
-
-## Legacy Note
-
-The legacy Google Sheets dependency has been removed from runtime code.
-MongoDB is now the authoritative data source.
-
-## Reference Document
-
-See `Reference.md` for full architecture details, schema definitions, data flow, assumptions, and known limitations.

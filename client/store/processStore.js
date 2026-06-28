@@ -122,6 +122,22 @@ export const useProcessStore = create((set, get) => ({
     set({ sapFilterEnabled: nextValue });
   },
 
+  removeRecentProcess(value) {
+    const normalized = normalize(value);
+    const recentProcesses = get().recentProcesses.filter((item) => item !== normalized);
+    writeStorage(RECENT_PROCESSES_KEY, recentProcesses);
+    
+    if (get().processName === normalized) {
+      writeStorage(LAST_PROCESS_KEY, "");
+      set({
+        processName: "",
+        recentProcesses,
+      });
+    } else {
+      set({ recentProcesses });
+    }
+  },
+
   resetFilters() {
     set({
       searchTerm: "",

@@ -25,8 +25,18 @@ export default function useProcessData(processName) {
     queryKey: ["process-data", normalizedProcessName],
     queryFn: () => fetchProcessData(normalizedProcessName),
     enabled: Boolean(normalizedProcessName),
-    refetchInterval: isStreamConnected ? false : pollInterval,
-    retry: 3,
+    refetchInterval: (queryInstance) => {
+      if (queryInstance?.state?.error?.response?.status === 404) {
+        return false;
+      }
+      return isStreamConnected ? false : pollInterval;
+    },
+    retry: (failureCount, error) => {
+      if (error?.response?.status === 404) {
+        return false;
+      }
+      return failureCount < 3;
+    },
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
   });
 
@@ -54,8 +64,10 @@ export default function useProcessData(processName) {
     setOfflineHint(Boolean(query.isError));
   }, [query.isError]);
 
+  const is404 = query?.error?.response?.status === 404;
+
   useEffect(() => {
-    if (!normalizedProcessName) {
+    if (!normalizedProcessName || is404) {
       return undefined;
     }
 

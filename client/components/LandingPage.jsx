@@ -15,6 +15,7 @@ export default function LandingPage() {
   const processName = useProcessStore((state) => state.processName);
   const recentProcesses = useProcessStore((state) => state.recentProcesses);
   const setProcessName = useProcessStore((state) => state.setProcessName);
+  const removeRecentProcess = useProcessStore((state) => state.removeRecentProcess);
 
   const processQuery = useQuery({
     queryKey: ["active-processes"],
@@ -68,6 +69,7 @@ export default function LandingPage() {
             options={processOptions} 
             recentProcesses={recentProcesses} 
             setProcessName={setProcessName} 
+            removeRecentProcess={removeRecentProcess}
           />
         </div>
 

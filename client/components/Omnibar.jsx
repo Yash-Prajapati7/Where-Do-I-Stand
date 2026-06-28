@@ -5,7 +5,7 @@ import { normalizeProcessInput } from "@/utils/api";
 
 import { Search } from "lucide-react";
 
-export default function Omnibar({ options, recentProcesses, setProcessName }) {
+export default function Omnibar({ options, recentProcesses, setProcessName, removeRecentProcess }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -134,19 +134,46 @@ export default function Omnibar({ options, recentProcesses, setProcessName }) {
                 <div className="px-2 py-1.5 text-[10px] font-mono text-muted-foreground uppercase tracking-wider select-none">
                   {inputValue ? "Matching Processes" : "Recent Process Connections"}
                 </div>
-                {displayOptions.map((option, index) => (
-                  <button
-                    key={option}
-                    onClick={() => handleNavigate(option)}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                    className={`w-full text-left px-3 py-2 rounded-[4px] text-xs transition-colors flex items-center justify-between ${
-                      selectedIndex === index ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"
-                    }`}
-                  >
-                    <span className="font-medium">{highlightMatch(option, inputValue)}</span>
-                    {selectedIndex === index && <span className="text-[10px] font-mono text-muted-foreground">↵</span>}
-                  </button>
-                ))}
+                {displayOptions.map((option, index) => {
+                  const isRecent = !inputValue;
+                  return (
+                    <div
+                      key={option}
+                      onMouseEnter={() => setSelectedIndex(index)}
+                      className={`w-full px-3 py-1 rounded-[4px] text-xs transition-colors flex items-center justify-between group/item cursor-pointer ${
+                        selectedIndex === index ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/50"
+                      }`}
+                    >
+                      <div
+                        onClick={() => handleNavigate(option)}
+                        className="flex-1 text-left py-1.5 font-medium"
+                      >
+                        {highlightMatch(option, inputValue)}
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        {isRecent && (
+                          <button
+                            type="button"
+                            title="Remove search from history"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (typeof removeRecentProcess === "function") {
+                                removeRecentProcess(option);
+                              }
+                            }}
+                            className="p-1 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded transition-colors border-0"
+                          >
+                            <span className="text-[14px] leading-none">&times;</span>
+                          </button>
+                        )}
+                        {selectedIndex === index && (
+                          <span className="text-[10px] font-mono text-muted-foreground select-none pointer-events-none">↵</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
           )}

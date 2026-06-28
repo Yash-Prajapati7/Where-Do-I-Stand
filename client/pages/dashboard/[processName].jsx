@@ -304,13 +304,19 @@ export default function DashboardPage() {
           ) : null}
 
           {isError && !data ? (
-            <div className="glass-panel rounded-lg p-6 border-red-200 bg-red-50/10 max-w-lg">
-              <h2 className="text-base font-bold text-red-800">Unable to load dashboard</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {error?.response?.data?.message || error?.message || "An error occurred while loading process data. Please check your internet connection and try again."}
+            <div className="glass-panel rounded-lg p-6 border border-rose-500/20 bg-rose-950/10 max-w-lg mx-auto mt-12">
+              <h2 className="text-base font-bold text-rose-500">
+                {error?.response?.status === 404 ? "Process Not Found" : "Unable to load dashboard"}
+              </h2>
+              <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                {error?.response?.status === 404
+                  ? "The requested placement process is absent, or you have entered an incorrect process identifier. Please verify the name and try again."
+                  : (error?.response?.data?.message || error?.message || "An error occurred while loading process data. Please check your internet connection and try again.")}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <Button onClick={() => refetch()}>Retry Now</Button>
+                {error?.response?.status !== 404 && (
+                  <Button onClick={() => refetch()}>Retry Now</Button>
+                )}
                 <Button variant="secondary" onClick={() => router.push("/")}>
                   Back To Landing
                 </Button>
@@ -318,14 +324,7 @@ export default function DashboardPage() {
             </div>
           ) : null}
 
-          {!isLoading && board.length === 0 ? (
-            <div className="glass-panel rounded-lg p-8 text-center max-w-md mx-auto mt-12">
-              <h2 className="text-base font-semibold">No rounds configured</h2>
-              <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
-                This recruitment process doesn't have any configured stages yet. Ask the process coordinator to configure rounds in admin step 3.
-              </p>
-            </div>
-          ) : null}
+
 
           {board.length > 0 && !isLoading ? (
             <div className="min-h-0 flex-1 h-full">
