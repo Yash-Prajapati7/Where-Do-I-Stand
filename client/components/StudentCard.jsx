@@ -1,17 +1,19 @@
 import { memo } from "react";
 
-function StudentCard({ student, showDepartment = false, statusColors }) {
+function StudentCard({ student, showDepartment = false, statusColors, statusNames }) {
   const sapId = String(student.sapId || "").trim() || "-";
   const status = student.status || "notStarted";
   const statusColor = statusColors?.[status] || "#f3f4f6";
 
   const statusLabels = {
     notStarted: "Not Started",
-    scheduled: "Scheduled",
-    inProgress: "In Progress",
-    qualified: "Qualified",
+    upNext: "Up Next",
+    ongoing: "Ongoing",
+    nextRound: "Next Round",
     rejected: "Rejected",
     onHold: "On Hold",
+    awaitingResults: "Awaiting Results",
+    ...(statusNames || {}),
   };
 
   return (
@@ -39,9 +41,9 @@ function StudentCard({ student, showDepartment = false, statusColors }) {
         <span
           className="px-1 py-0.5 rounded-[3px] text-[8px] font-mono uppercase tracking-[0.02em] font-semibold border"
           style={{
-            backgroundColor: `${statusColor}1c`, // ~11% opacity for light background tint
-            borderColor: `${statusColor}99`, // ~60% opacity for border
-            color: statusColor,
+            backgroundColor: `${statusColor}`, // ~11% opacity for light background tint
+            borderColor: `${statusColor}`, // ~60% opacity for border
+            color: "black",
           }}
         >
           {statusLabels[status] || status}
@@ -49,7 +51,7 @@ function StudentCard({ student, showDepartment = false, statusColors }) {
       </div>
 
       {(student.groupNumber || student.venue || student.remarks) && (
-        <div className="mt-2 pt-2 border-t border-border/60 text-[9px] space-y-1 text-muted-foreground">
+        <div className="mt-2 pt-2 border-t border-border/60 text-[13px] space-y-1 text-muted-foreground">
           {student.groupNumber && (
             <div className="flex justify-between gap-1.5">
               <span>Group:</span>

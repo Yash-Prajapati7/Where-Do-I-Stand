@@ -17,7 +17,7 @@ export default function FAQPage() {
     },
     {
       question: "What are the different candidate statuses?",
-      answer: "Candidates can have the following statuses: Qualified (passed), In Progress (being evaluated), Scheduled (interview scheduled), Rejected (not selected), On Hold (pending), or Not Started (evaluation not begun).",
+      answer: "Candidates can have the following statuses: Next Round (passed), Ongoing (being evaluated), Up Next (interview scheduled), Awaiting Results (awaiting round scores), Rejected (not selected), On Hold (pending), or Not Started (evaluation not begun).",
     },
     {
       question: "Can I search for a specific candidate?",

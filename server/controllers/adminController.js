@@ -27,6 +27,7 @@ function serializeRound(round) {
     metadataTemplate: {
       allowVenue: Boolean(round.metadataTemplate?.allowVenue),
       allowGroupNumber: Boolean(round.metadataTemplate?.allowGroupNumber),
+      maxGroups: Number(round.metadataTemplate?.maxGroups) || 0,
       customFields: Array.isArray(round.metadataTemplate?.customFields)
         ? round.metadataTemplate.customFields
         : [],
@@ -50,13 +51,26 @@ function serializeProcess(processDoc) {
       ? Object.fromEntries(processDoc.statusColors)
       : processDoc.statusColors || {
           notStarted: "#f3f4f6",
-          scheduled: "#dbeafe",
-          inProgress: "#fef3c7",
-          qualified: "#d1fae5",
+          upNext: "#dbeafe",
+          ongoing: "#fef3c7",
+          nextRound: "#d1fae5",
           rejected: "#fee2e2",
           onHold: "#f3e8ff",
+          awaitingResults: "#e2e8f0",
+        },
+    statusNames: processDoc.statusNames instanceof Map
+      ? Object.fromEntries(processDoc.statusNames)
+      : processDoc.statusNames || {
+          notStarted: "Not Started",
+          upNext: "Up Next",
+          ongoing: "Ongoing",
+          nextRound: "Next Round",
+          rejected: "Rejected",
+          onHold: "On Hold",
+          awaitingResults: "Awaiting Results",
         },
     isArchived: processDoc.isArchived,
+    predefinedVenues: Array.isArray(processDoc.predefinedVenues) ? processDoc.predefinedVenues : [],
     createdAt: processDoc.createdAt,
     updatedAt: processDoc.updatedAt,
   };
@@ -110,6 +124,7 @@ function normalizeRoundMetadataTemplate(roundType, metadataTemplate = {}) {
       defaultAllowGroupNumber
     ),
     allowVenue: toBoolean(metadataTemplate.allowVenue, defaultAllowVenue),
+    maxGroups: typeof metadataTemplate.maxGroups !== "undefined" ? Number(metadataTemplate.maxGroups) || 0 : 0,
     customFields: normalizeCustomFields(metadataTemplate.customFields),
   };
 }
@@ -555,7 +570,7 @@ export async function upsertStudentRoundResult(req, res, next) {
       throw createHttpError("Round not found for this process.", 404);
     }
 
-    const requestedStatus = normalizeText(req.body.status || "scheduled");
+    const requestedStatus = normalizeText(req.body.status || "upNext");
     assert(
       roundResultStatuses.includes(requestedStatus),
       `Invalid status. Allowed values: ${roundResultStatuses.join(", ")}`,
@@ -647,6 +662,15 @@ export async function updateProcessMetadata(req, res, next) {
       processDoc.statusColors = req.body.statusColors;
     }
 
+    if (typeof req.body.statusNames !== "undefined") {
+      processDoc.statusNames = req.body.statusNames;
+    }
+
+    if (typeof req.body.predefinedVenues !== "undefined") {
+      assert(Array.isArray(req.body.predefinedVenues), "Predefined venues must be an array.", 400);
+      processDoc.predefinedVenues = req.body.predefinedVenues.map(v => normalizeText(v)).filter(Boolean);
+    }
+
     await processDoc.save();
     notifyProcessUpdate(processDoc, "processUpdated");
 
@@ -710,6 +734,100 @@ export async function deleteStudentFromProcess(req, res, next) {
 
     res.status(200).json({
       message: "Student and their progress records deleted successfully.",
+      process: serializeProcess(processDoc),
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function bulkUpdateStudentRoundResults(req, res, next) {
+  try {
+    const processDoc = await findProcessById(req.params.processId);
+    const round = processDoc.rounds.id(req.params.roundId);
+
+    if (!round) {
+      throw createHttpError("Round not found for this process.", 404);
+    }
+
+    assert(
+      round.type === "groupDiscussion",
+      "Bulk updates are only supported for Group Discussion stages.",
+      400
+    );
+
+    const { studentIds, groupNumber, status, venue, remarks } = req.body;
+
+    const requestedStatus = status ? normalizeText(status) : undefined;
+    if (requestedStatus) {
+      assert(
+        roundResultStatuses.includes(requestedStatus),
+        `Invalid status. Allowed values: ${roundResultStatuses.join(", ")}`,
+        400
+      );
+    }
+
+    const updateFields = {};
+    if (typeof groupNumber !== "undefined") {
+      updateFields.groupNumber = normalizeText(groupNumber);
+    }
+    if (typeof requestedStatus !== "undefined") {
+      updateFields.status = requestedStatus;
+    }
+    if (typeof venue !== "undefined") {
+      updateFields.venue = normalizeText(venue);
+    }
+    if (typeof remarks !== "undefined") {
+      updateFields.remarks = normalizeText(remarks);
+    }
+
+    if (Array.isArray(studentIds) && studentIds.length > 0) {
+      const bulkOps = [];
+      for (const studentKey of studentIds) {
+        const studentObj = processDoc.students.find(
+          (s) => String(s._id) === studentKey || s.sapId === normalizeSapId(studentKey)
+        );
+
+        if (studentObj) {
+          bulkOps.push({
+            updateOne: {
+              filter: {
+                processId: processDoc._id,
+                studentId: studentObj._id,
+                roundId: round._id,
+              },
+              update: {
+                $set: updateFields,
+              },
+              upsert: true,
+            },
+          });
+        }
+      }
+
+      if (bulkOps.length > 0) {
+        await RoundResult.bulkWrite(bulkOps);
+      }
+    } else if (typeof groupNumber !== "undefined" && groupNumber !== "") {
+      const targetGroup = normalizeText(groupNumber);
+      await RoundResult.updateMany(
+        {
+          processId: processDoc._id,
+          roundId: round._id,
+          groupNumber: targetGroup,
+        },
+        {
+          $set: updateFields,
+        }
+      );
+    } else {
+      throw createHttpError("Invalid bulk update payload: provide studentIds or a groupNumber.", 400);
+    }
+
+    notifyProcessUpdate(processDoc, "roundResultUpdated");
+
+    res.status(200).json({
+      message: "Bulk update completed successfully.",
       process: serializeProcess(processDoc),
     });
   } catch (error) {

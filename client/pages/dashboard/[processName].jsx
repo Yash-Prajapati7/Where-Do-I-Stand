@@ -340,7 +340,7 @@ export default function DashboardPage() {
                   </Button>
                 </div>
               ) : (
-                <KanbanBoard board={filteredBoard} showDepartment={showDepartment} statusColors={data?.process?.statusColors} />
+                <KanbanBoard board={filteredBoard} showDepartment={showDepartment} statusColors={data?.process?.statusColors} statusNames={data?.process?.statusNames} />
               )}
             </div>
           ) : null}

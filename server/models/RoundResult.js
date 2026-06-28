@@ -2,11 +2,12 @@ import mongoose from "mongoose";
 
 export const roundResultStatuses = [
   "notStarted",
-  "scheduled",
-  "inProgress",
-  "qualified",
+  "upNext",
+  "ongoing",
+  "nextRound",
   "rejected",
   "onHold",
+  "awaitingResults",
 ];
 
 const roundResultSchema = new mongoose.Schema(
@@ -30,7 +31,7 @@ const roundResultSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: roundResultStatuses,
-      default: "scheduled",
+      default: "upNext",
     },
     venue: {
       type: String,

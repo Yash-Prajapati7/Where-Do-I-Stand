@@ -17,7 +17,7 @@ function roundTypeLabel(roundType) {
     .replace(/(^\s*)\w/g, (match) => match.toUpperCase());
 }
 
-export default function KanbanColumn({ column, showDepartment = false, statusColors }) {
+export default function KanbanColumn({ column, showDepartment = false, statusColors, statusNames }) {
   const students = column.students || [];
   const listRef = useRef(null);
   const [showBottomFade, setShowBottomFade] = useState(false);
@@ -97,7 +97,7 @@ export default function KanbanColumn({ column, showDepartment = false, statusCol
                   visible: { opacity: 1, y: 0 },
                 }}
               >
-                <StudentCard student={student} showDepartment={showDepartment} statusColors={statusColors} />
+                <StudentCard student={student} showDepartment={showDepartment} statusColors={statusColors} statusNames={statusNames} />
               </motion.div>
             ))
           )}

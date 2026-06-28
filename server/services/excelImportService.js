@@ -13,7 +13,7 @@ const HEADER_ALIASES = {
     "sapstudentnumber",
   ],
   fullName: ["name", "studentname", "fullname", "candidatename"],
-  branch: ["branch", "department", "stream", "course", "dept"],
+  branch: ["branch", "department", "stream", "course", "dept", "branchname"],
 };
 
 function normalizeHeader(header) {

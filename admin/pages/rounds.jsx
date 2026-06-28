@@ -21,6 +21,7 @@ import {
   fetchAdminProcess,
   removeProcessRound,
   updateProcessRound,
+  updateAdminProcessMetadata,
 } from "@/utils/api";
 
 const roundTypeOptions = [
@@ -68,62 +69,18 @@ export default function RoundsStepPage() {
   const [newRoundForm, setNewRoundForm] = useState({
     name: "Group Discussion",
     type: "groupDiscussion",
-    selectedNameOption: "groupDiscussion",
     order: "",
-    allowVenue: false,
-    allowGroupNumber: false,
   });
 
+  const [venueInput, setVenueInput] = useState("");
   const [roundDrafts, setRoundDrafts] = useState({});
   const [addRoundAck, setAddRoundAck] = useState("");
-  const [newVenueInputs, setNewVenueInputs] = useState({});
-
-  function handleAddPredefinedVenue(roundId) {
-    const venueText = (newVenueInputs[roundId] || "").trim();
-    if (!venueText) return;
-
-    setRoundDrafts((prev) => {
-      const draft = prev[roundId];
-      if (!draft) return prev;
-      const currentVenues = draft.predefinedVenues || [];
-      if (currentVenues.includes(venueText)) return prev;
-
-      return {
-        ...prev,
-        [roundId]: {
-          ...draft,
-          predefinedVenues: [...currentVenues, venueText],
-        },
-      };
-    });
-
-    setNewVenueInputs((prev) => ({
-      ...prev,
-      [roundId]: "",
-    }));
-  }
-
-  function handleRemovePredefinedVenue(roundId, indexToRemove) {
-    setRoundDrafts((prev) => {
-      const draft = prev[roundId];
-      if (!draft) return prev;
-      const currentVenues = draft.predefinedVenues || [];
-
-      return {
-        ...prev,
-        [roundId]: {
-          ...draft,
-          predefinedVenues: currentVenues.filter((_, idx) => idx !== indexToRemove),
-        },
-      };
-    });
-  }
 
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: "",
     message: "",
-    onConfirm: () => {},
+    onConfirm: () => { },
   });
 
   const processDetailQuery = useQuery({
@@ -176,7 +133,7 @@ export default function RoundsStepPage() {
       const promises = updated.map((round, idx) => {
         const newOrder = idx + 1;
         const draft = roundDrafts[round.id] || {};
-        
+
         if (round.order !== newOrder) {
           setRoundDrafts((prev) => {
             if (prev[round.id]) {
@@ -199,6 +156,7 @@ export default function RoundsStepPage() {
             metadataTemplate: {
               allowVenue: draft.allowVenue !== undefined ? draft.allowVenue : round.metadataTemplate?.allowVenue,
               allowGroupNumber: draft.allowGroupNumber !== undefined ? draft.allowGroupNumber : round.metadataTemplate?.allowGroupNumber,
+              maxGroups: draft.maxGroups !== undefined ? draft.maxGroups : round.metadataTemplate?.maxGroups,
             },
             predefinedVenues: draft.predefinedVenues || round.predefinedVenues || [],
           });
@@ -247,6 +205,7 @@ export default function RoundsStepPage() {
             isActive: Boolean(round.isActive),
             allowVenue: Boolean(round.metadataTemplate?.allowVenue),
             allowGroupNumber: Boolean(round.metadataTemplate?.allowGroupNumber),
+            maxGroups: Number(round.metadataTemplate?.maxGroups) || 0,
             predefinedVenues: round.predefinedVenues || [],
           };
         }
@@ -274,10 +233,7 @@ export default function RoundsStepPage() {
       setNewRoundForm({
         name: "Group Discussion",
         type: "groupDiscussion",
-        selectedNameOption: "groupDiscussion",
         order: "",
-        allowVenue: false,
-        allowGroupNumber: false,
       });
     },
   });
@@ -332,8 +288,8 @@ export default function RoundsStepPage() {
         type: newRoundForm.type,
         order: Number(newRoundForm.order) || undefined,
         metadataTemplate: {
-          allowVenue: Boolean(newRoundForm.allowVenue),
-          allowGroupNumber: Boolean(newRoundForm.allowGroupNumber),
+          allowVenue: true,
+          allowGroupNumber: false,
         },
       },
     });
@@ -357,6 +313,7 @@ export default function RoundsStepPage() {
         metadataTemplate: {
           allowVenue: Boolean(draft.allowVenue),
           allowGroupNumber: Boolean(draft.allowGroupNumber),
+          maxGroups: Number(draft.maxGroups) || 0,
         },
         predefinedVenues: draft.predefinedVenues || [],
       },
@@ -381,7 +338,7 @@ export default function RoundsStepPage() {
   return (
     <AdminLayout
       title="Step 3: Manage Rounds"
-      description="Add new rounds, edit existing rounds, and review round history for the selected process." 
+      description="Add new rounds, edit existing rounds, and review round history for the selected process."
       processReady={Boolean(selectedProcessId)}
       selectedProcessLabel={selectedProcessLabel}
     >
@@ -397,27 +354,26 @@ export default function RoundsStepPage() {
         </section>
       ) : (
         <>
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <article className="panel">
               <h2 className="text-base font-bold tracking-tight mb-4 text-neutral-900 border-b border-neutral-100 pb-2">Add Stage</h2>
               <form className="stack" onSubmit={onAddRound}>
                 <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
-                  Select Round Name
+                  Type
                   <Select
-                    value={newRoundForm.selectedNameOption}
+                    value={newRoundForm.type}
                     onChange={(event) => {
                       const val = event.target.value;
-                      const matchedOption = predefinedRounds.find(opt => opt.value === val);
+                      const matchedOption = roundTypeOptions.find(opt => opt.value === val);
                       setNewRoundForm((previous) => ({
                         ...previous,
-                        selectedNameOption: val,
+                        type: val,
                         name: val === "custom" ? "" : (matchedOption ? matchedOption.label : ""),
-                        type: val === "custom" ? "custom" : (matchedOption ? matchedOption.type : "custom"),
                       }));
                     }}
                     className="mt-1"
                   >
-                    {predefinedRounds.map((option) => (
+                    {roundTypeOptions.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
@@ -425,9 +381,9 @@ export default function RoundsStepPage() {
                   </Select>
                 </label>
 
-                {newRoundForm.selectedNameOption === "custom" && (
+                {newRoundForm.type === "custom" && (
                   <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
-                    Custom Stage / Round Name
+                    Stage Name
                     <Input
                       value={newRoundForm.name}
                       onChange={(event) =>
@@ -442,26 +398,6 @@ export default function RoundsStepPage() {
                     />
                   </label>
                 )}
-
-                <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
-                  Stage Type
-                  <Select
-                    value={newRoundForm.type}
-                    onChange={(event) =>
-                      setNewRoundForm((previous) => ({
-                        ...previous,
-                        type: event.target.value,
-                      }))
-                    }
-                    className="mt-1"
-                  >
-                    {roundTypeOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </Select>
-                </label>
 
                 <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider">
                   Order Index (Optional)
@@ -480,38 +416,6 @@ export default function RoundsStepPage() {
                   />
                 </label>
 
-                <div className="checkbox-row mt-1 py-1">
-                  <label className="text-xs text-neutral-600 flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={newRoundForm.allowGroupNumber}
-                      onChange={(event) =>
-                        setNewRoundForm((previous) => ({
-                          ...previous,
-                          allowGroupNumber: event.target.checked,
-                        }))
-                      }
-                      className="rounded-[3px] border-neutral-300 text-black focus:ring-black h-3.5 w-3.5"
-                    />
-                    Enable Group Number
-                  </label>
-
-                  <label className="text-xs text-neutral-600 flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={newRoundForm.allowVenue}
-                      onChange={(event) =>
-                        setNewRoundForm((previous) => ({
-                          ...previous,
-                          allowVenue: event.target.checked,
-                        }))
-                      }
-                      className="rounded-[3px] border-neutral-300 text-black focus:ring-black h-3.5 w-3.5"
-                    />
-                    Enable Venue Info
-                  </label>
-                </div>
-
                 <Button type="submit" disabled={addRoundMutation.isPending} className="w-full justify-center">
                   <Plus size={14} strokeWidth={2.5} className="mr-1.5" />
                   {addRoundMutation.isPending ? "Adding…" : "Add Stage"}
@@ -527,7 +431,89 @@ export default function RoundsStepPage() {
                 </div>
               ) : null}
             </article>
-            
+
+            <article className="panel">
+              <h2 className="text-base font-bold tracking-tight mb-4 text-neutral-900 border-b border-neutral-100 pb-2">Manage Venues</h2>
+              <div className="stack">
+                <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider block">
+                  Add New Predefined Venue
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      placeholder="e.g. Lab 4 or Seminar Hall"
+                      value={venueInput}
+                      onChange={(e) => setVenueInput(e.target.value)}
+                      className="flex-1 text-xs py-1 px-2 h-8"
+                    />
+                    <Button
+                      type="button"
+                      onClick={async () => {
+                        const val = venueInput.trim();
+                        if (!val) return;
+                        const currentVenues = processDetail?.predefinedVenues || [];
+                        if (currentVenues.includes(val)) {
+                          setVenueInput("");
+                          return;
+                        }
+                        try {
+                          await updateAdminProcessMetadata(selectedProcessId, {
+                            predefinedVenues: [...currentVenues, val],
+                          });
+                          queryClient.invalidateQueries({
+                            queryKey: ["admin-process-detail", selectedProcessId],
+                          });
+                          setVenueInput("");
+                        } catch (err) {
+                          console.error("Failed to add venue:", err);
+                        }
+                      }}
+                      className="text-xs py-1 px-2.5 h-8 w-auto justify-center"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </label>
+
+                <div className="mt-4 pt-3 border-t border-neutral-100">
+                  <span className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider block mb-2">
+                    Current Venues ({processDetail?.predefinedVenues?.length || 0})
+                  </span>
+                  {processDetail?.predefinedVenues && processDetail.predefinedVenues.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {processDetail.predefinedVenues.map((venue, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 bg-neutral-100 border border-neutral-200 text-[11px] font-medium text-neutral-700 px-2 py-0.5 rounded"
+                        >
+                          {venue}
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const currentVenues = processDetail.predefinedVenues || [];
+                              try {
+                                await updateAdminProcessMetadata(selectedProcessId, {
+                                  predefinedVenues: currentVenues.filter((_, i) => i !== idx),
+                                });
+                                queryClient.invalidateQueries({
+                                  queryKey: ["admin-process-detail", selectedProcessId],
+                                });
+                              } catch (err) {
+                                console.error("Failed to delete venue:", err);
+                              }
+                            }}
+                            className="text-red-500 hover:text-red-700 font-bold ml-1 text-xs border-0"
+                          >
+                            &times;
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-neutral-400 italic">No venues defined yet.</p>
+                  )}
+                </div>
+              </div>
+            </article>
+
             <article className="panel">
               <div className="flex items-center gap-2 mb-4 pb-2 border-b border-neutral-100">
                 <History size={20} className="text-neutral-500" />
@@ -592,9 +578,8 @@ export default function RoundsStepPage() {
                       onDragStart={(e) => handleDragStart(e, index)}
                       onDragOver={(e) => handleDragOver(e, index)}
                       onDrop={(e) => handleDrop(e, index)}
-                      className={`round-card border border-neutral-200 bg-neutral-50/30 p-4 rounded-[6px] flex flex-col justify-between transition-all duration-200 ${
-                        draggingIndex === index ? "opacity-40 scale-95 border-dashed border-accent" : ""
-                      }`}
+                      className={`round-card border border-neutral-200 bg-neutral-50/30 p-4 rounded-[6px] flex flex-col justify-between transition-all duration-200 ${draggingIndex === index ? "opacity-40 scale-95 border-dashed border-accent" : ""
+                        }`}
                     >
                       <div className="space-y-3">
                         <header className="flex items-center justify-between pb-2 border-b border-neutral-100">
@@ -684,75 +669,28 @@ export default function RoundsStepPage() {
                             />
                             Group Info
                           </label>
+                        </div>
 
-                          <label className="text-[11px] text-neutral-600 flex items-center gap-1.5 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={draft.allowVenue}
+                        {draft.allowGroupNumber && (
+                          <label className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider mt-2 block">
+                            Max Groups Count
+                            <Input
+                              type="number"
+                              min="1"
+                              value={draft.maxGroups || ""}
                               onChange={(event) =>
                                 setRoundDrafts((previous) => ({
                                   ...previous,
                                   [round.id]: {
                                     ...previous[round.id],
-                                    allowVenue: event.target.checked,
+                                    maxGroups: Number(event.target.value) || 0,
                                   },
                                 }))
                               }
-                              className="rounded-[3px] border-neutral-300 text-black focus:ring-black h-3.5 w-3.5"
+                              placeholder="e.g. 5"
+                              className="mt-1 font-mono"
                             />
-                            Venue Info
                           </label>
-                        </div>
-
-                        {draft.allowVenue && (
-                          <div className="space-y-1.5 mt-2 pt-2 border-t border-neutral-100">
-                            <span className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider block">
-                              Predefined Venues
-                            </span>
-                            <div className="flex gap-2">
-                              <Input
-                                placeholder="e.g. Lab 4"
-                                value={newVenueInputs[round.id] || ""}
-                                onChange={(e) =>
-                                  setNewVenueInputs((prev) => ({
-                                    ...prev,
-                                    [round.id]: e.target.value,
-                                  }))
-                                }
-                                className="flex-1 text-xs py-1 px-2 h-8"
-                              />
-                              <Button
-                                type="button"
-                                onClick={() => handleAddPredefinedVenue(round.id)}
-                                className="text-xs py-1 px-2.5 h-8 w-auto justify-center"
-                              >
-                                Add
-                              </Button>
-                            </div>
-                            {draft.predefinedVenues && draft.predefinedVenues.length > 0 ? (
-                              <div className="flex flex-wrap gap-1 mt-1.5">
-                                {draft.predefinedVenues.map((venue, index) => (
-                                  <span
-                                    key={index}
-                                    className="inline-flex items-center gap-1 bg-neutral-200/80 dark:bg-neutral-800 text-[10px] font-medium text-neutral-700 dark:text-neutral-300 px-2 py-0.5 rounded"
-                                  >
-                                    {venue}
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleRemovePredefinedVenue(round.id, index)
-                                      }
-                                      className="text-red-500 hover:text-red-700 font-bold ml-1 text-xs hover:scale-110 transition-transform"
-                                    >
-                                      &times;
-                                    </button>
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-[10px] text-neutral-400 italic">No venues predefined.</p>
-                            )}
-                          </div>
                         )}
                       </div>
 

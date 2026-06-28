@@ -9,8 +9,8 @@ function evaluationState(student) {
     return "Under Evaluation";
   }
 
-  if (normalizedStatus === "scheduled") {
-    return "Scheduled";
+  if (normalizedStatus === "upnext") {
+    return "Up Next";
   }
 
   return "Awaited";

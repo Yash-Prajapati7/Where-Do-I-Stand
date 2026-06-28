@@ -14,6 +14,7 @@ import {
   updateProcessMetadata,
   deleteProcess,
   deleteStudentFromProcess,
+  bulkUpdateStudentRoundResults,
 } from "../controllers/adminController.js";
 
 const router = Router();
@@ -35,6 +36,7 @@ router.delete("/admin/processes/:processId/students/:sapId", deleteStudentFromPr
 router.post("/admin/processes/:processId/rounds", addRoundToProcess);
 router.patch("/admin/processes/:processId/rounds/:roundId", updateProcessRound);
 router.delete("/admin/processes/:processId/rounds/:roundId", deleteProcessRound);
+router.patch("/admin/processes/:processId/rounds/:roundId/bulk-update", bulkUpdateStudentRoundResults);
 router.post(
   "/admin/processes/:processId/students/upload",
   upload.single("file"),

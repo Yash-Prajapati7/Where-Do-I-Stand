@@ -225,11 +225,23 @@ export function buildProcessBoard({ processDoc, students, roundResults, filters 
         ? Object.fromEntries(processDoc.statusColors)
         : processDoc.statusColors || {
             notStarted: "#f3f4f6",
-            scheduled: "#dbeafe",
-            inProgress: "#fef3c7",
-            qualified: "#d1fae5",
+            upNext: "#dbeafe",
+            ongoing: "#fef3c7",
+            nextRound: "#d1fae5",
             rejected: "#fee2e2",
             onHold: "#f3e8ff",
+            awaitingResults: "#e2e8f0",
+          },
+      statusNames: processDoc.statusNames instanceof Map
+        ? Object.fromEntries(processDoc.statusNames)
+        : processDoc.statusNames || {
+            notStarted: "Not Started",
+            upNext: "Up Next",
+            ongoing: "Ongoing",
+            nextRound: "Next Round",
+            rejected: "Rejected",
+            onHold: "On Hold",
+            awaitingResults: "Awaiting Results",
           },
     },
     board: filteredColumns,

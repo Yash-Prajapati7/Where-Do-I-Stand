@@ -87,4 +87,12 @@ export async function deleteStudentFromProcess(processId, sapId) {
   return response.data;
 }
 
+export async function bulkUpdateStudentRoundResults(processId, roundId, payload) {
+  const response = await api.patch(
+    `/admin/processes/${processId}/rounds/${roundId}/bulk-update`,
+    payload
+  );
+  return response.data;
+}
+
 export default api;

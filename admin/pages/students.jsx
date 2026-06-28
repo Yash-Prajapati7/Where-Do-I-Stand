@@ -206,7 +206,7 @@ export default function StudentsStepPage() {
                     <div className="space-y-1 font-mono">
                       <p><strong className="text-blue-900">Required:</strong> SAP ID (aliases: SAPID, SAP No, SAP Number, Student ID)</p>
                       <p><strong className="text-blue-900">Required:</strong> Full Name (aliases: Name, Student Name, Candidate Name)</p>
-                      <p><strong className="text-blue-900">Optional:</strong> Department/Branch (aliases: Branch, Stream, Course, Dept)</p>
+                      <p><strong className="text-blue-900">Optional:</strong> Department/Branch (aliases: Branch, Branch Name, Stream, Course, Dept)</p>
                     </div>
                   </div>
 

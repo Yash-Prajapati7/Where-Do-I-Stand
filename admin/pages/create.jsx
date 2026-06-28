@@ -39,6 +39,7 @@ export default function CreateProcessPage() {
       setProcessForm({ processName: "", companyName: "", description: "" });
       setFeedbackMessage({ type: "success", text: "New process created! Starting setup flow." });
       setNewProcessCreated(true);
+      router.push("/students");
     },
     onError: (err) => {
       setFeedbackMessage({
@@ -68,9 +69,8 @@ export default function CreateProcessPage() {
       {/* Feedback Messages */}
       {feedbackMessage && (
         <div
-          className={`status-box ${
-            feedbackMessage.type === "success" ? "success" : "error"
-          } mb-4`}
+          className={`status-box ${feedbackMessage.type === "success" ? "success" : "error"
+            } mb-4`}
         >
           {feedbackMessage.text}
         </div>

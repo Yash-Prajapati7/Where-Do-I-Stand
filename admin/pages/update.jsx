@@ -26,6 +26,8 @@ export default function UpdateProcessPage() {
     processName: "",
     companyName: "",
     description: "",
+    statusColors: {},
+    statusNames: {},
   });
 
   const [feedbackMessage, setFeedbackMessage] = useState(null);
@@ -62,11 +64,21 @@ export default function UpdateProcessPage() {
         description: processDetail.description || "",
         statusColors: processDetail.statusColors || {
           notStarted: "#f3f4f6",
-          scheduled: "#dbeafe",
-          inProgress: "#fef3c7",
-          qualified: "#d1fae5",
+          upNext: "#dbeafe",
+          ongoing: "#fef3c7",
+          nextRound: "#d1fae5",
           rejected: "#fee2e2",
           onHold: "#f3e8ff",
+          awaitingResults: "#e2e8f0",
+        },
+        statusNames: processDetail.statusNames || {
+          notStarted: "Not Started",
+          upNext: "Up Next",
+          ongoing: "Ongoing",
+          nextRound: "Next Round",
+          rejected: "Rejected",
+          onHold: "On Hold",
+          awaitingResults: "Awaiting Results",
         },
       });
     }
@@ -171,15 +183,15 @@ export default function UpdateProcessPage() {
             </div>
           </article>
         ) : processDetail ? (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Overview Header Card */}
-            <article className="panel flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <article 
+              className="panel flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+              style={{ padding: "0.75rem 1.25rem" }}
+            >
               <div>
-                <h2 className="text-lg font-bold text-neutral-900 mb-1">
-                  Managing: {processDetail.processName}
-                </h2>
                 <p className="text-xs text-neutral-500">
-                  Company: <span className="font-semibold text-neutral-700">{processDetail.companyName || "-"}</span> | Identifier: <span className="font-mono text-neutral-700">{processDetail.processIdentifier}</span>
+                  Identifier: <span className="font-mono text-neutral-700">{processDetail.processIdentifier}</span> | Candidates: <span className="font-semibold text-neutral-700">{processDetail.studentCount || 0}</span> | Rounds: <span className="font-semibold text-neutral-700">{processDetail.rounds.length}</span>
                 </p>
               </div>
               <div className="flex gap-2">
@@ -193,17 +205,6 @@ export default function UpdateProcessPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Info & Settings Column */}
               <div className="col-span-12 lg:col-span-7 space-y-6">
-                {/* Overview Stats */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="panel flex flex-col justify-center p-4 bg-neutral-50 border border-neutral-100">
-                    <span className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider uppercase">Candidates</span>
-                    <span className="text-2xl font-bold text-neutral-900 mt-1">{processDetail.studentCount || 0}</span>
-                  </div>
-                  <div className="panel flex flex-col justify-center p-4 bg-neutral-50 border border-neutral-100">
-                    <span className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider uppercase">Rounds Configured</span>
-                    <span className="text-2xl font-bold text-neutral-900 mt-1">{processDetail.rounds.length}</span>
-                  </div>
-                </div>
 
                 <article className="panel">
                   <div className="flex items-center gap-2 mb-4 pb-2 border-b border-neutral-100">
@@ -273,21 +274,32 @@ export default function UpdateProcessPage() {
                 </article>
 
                 <article className="panel">
-                  <h3 className="text-xs font-bold text-neutral-900 mb-3 pb-2 border-b border-neutral-100">Status Progress Colors</h3>
+                  <h3 className="text-xs font-bold text-neutral-900 mb-3 pb-2 border-b border-neutral-100">Status & Colors Configuration</h3>
                   <form className="stack" onSubmit={onUpdateProcess}>
-                    <div className="grid grid-cols-2 gap-3">
-                      {Object.entries(editForm.statusColors || {}).map(([statusKey, color]) => {
-                        const statusLabels = {
-                          notStarted: "Not Started",
-                          scheduled: "Scheduled",
-                          inProgress: "In Progress",
-                          qualified: "Qualified",
-                          rejected: "Rejected",
-                          onHold: "On Hold",
-                        };
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {Object.entries(editForm.statusColors || {})
+                        .filter(([statusKey]) => statusKey !== "notStarted")
+                        .map(([statusKey, color]) => {
                         return (
-                          <label key={statusKey} className="text-[10px] font-mono text-neutral-400 font-semibold tracking-wider flex flex-col gap-1">
-                            {statusLabels[statusKey] || statusKey}
+                          <div key={statusKey} className="flex flex-col gap-2 border border-neutral-100 p-2.5 rounded-lg bg-neutral-50/50">
+                            {/* Status Label Name Input */}
+                            <Input
+                              value={(editForm.statusNames && editForm.statusNames[statusKey]) || ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setEditForm(prev => ({
+                                  ...prev,
+                                  statusNames: {
+                                    ...(prev.statusNames || {}),
+                                    [statusKey]: val,
+                                  }
+                                }));
+                              }}
+                              placeholder="Status Name"
+                              className="mt-0 text-xs py-1.5 px-2 font-sans h-8"
+                            />
+
+                            {/* Status Color Picker & Hex Input */}
                             <div className="flex gap-2 items-center">
                               <input
                                 type="color"
@@ -320,13 +332,13 @@ export default function UpdateProcessPage() {
                                 className="flex-1 mt-0 text-xs py-1 px-2 font-mono h-8"
                               />
                             </div>
-                          </label>
+                          </div>
                         );
                       })}
                     </div>
                     <div className="pt-4 mt-2">
                       <Button variant="secondary" type="submit" disabled={updateProcessMutation.isPending} className="w-full justify-center">
-                        {updateProcessMutation.isPending ? "Saving Colors..." : "Save Colors"}
+                        {updateProcessMutation.isPending ? "Saving Configuration..." : "Save Status & Colors"}
                       </Button>
                     </div>
                   </form>

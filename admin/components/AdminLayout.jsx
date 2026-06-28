@@ -85,7 +85,7 @@ export default function AdminLayout({
 
           {!hideActiveProcess && (
             <div className="process-chip flex items-center gap-2 py-1 px-2.5">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 font-semibold select-none">Active Process:</span>
+              <span className="text-[14px] font-mono uppercase tracking-wider text-neutral-400 font-semibold select-none">Process:</span>
               <select
                 value={isCreating ? "" : selectedProcessId}
                 onChange={(e) => setSelectedProcessId(e.target.value)}

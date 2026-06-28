@@ -35,6 +35,10 @@ const roundMetadataTemplateSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    maxGroups: {
+      type: Number,
+      default: 0,
+    },
     customFields: {
       type: [customFieldSchema],
       default: [],
@@ -143,16 +147,34 @@ const processSchema = new mongoose.Schema(
       type: [studentSchema],
       default: [],
     },
+    predefinedVenues: {
+      type: [String],
+      default: [],
+    },
     statusColors: {
       type: Map,
       of: String,
       default: () => ({
         notStarted: "#f3f4f6",
-        scheduled: "#dbeafe",
-        inProgress: "#fef3c7",
-        qualified: "#d1fae5",
+        upNext: "#dbeafe",
+        ongoing: "#fef3c7",
+        nextRound: "#d1fae5",
         rejected: "#fee2e2",
         onHold: "#f3e8ff",
+        awaitingResults: "#e2e8f0",
+      }),
+    },
+    statusNames: {
+      type: Map,
+      of: String,
+      default: () => ({
+        notStarted: "Not Started",
+        upNext: "Up Next",
+        ongoing: "Ongoing",
+        nextRound: "Next Round",
+        rejected: "Rejected",
+        onHold: "On Hold",
+        awaitingResults: "Awaiting Results",
       }),
     },
     isArchived: {
